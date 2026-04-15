@@ -1,4 +1,4 @@
-ok # Rabbit R1 Creation — Tips & Tricks
+# Rabbit R1 Creation — Tips & Tricks
 
 Hard-won knowledge from building shopping-list, todo, anchor, rep-tracker, spirit-level, notes, dice-roller and the Intern app deep-dive.
 
