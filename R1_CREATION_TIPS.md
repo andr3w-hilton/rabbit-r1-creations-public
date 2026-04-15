@@ -518,7 +518,7 @@ The `themeColor` in the QR JSON controls the card colour shown in the R1 app sta
 ```javascript
 var qrData = JSON.stringify({
   title: "My Creation",
-  url: "https://r1.youvebeenpwnd.com/my-slug/?v=1",
+  url: "https://your-domain.com/my-slug/?v=1",
   description: "What it does",
   iconUrl: "",
   themeColor: "#FE5000"  // ← card colour in the stack
@@ -539,7 +539,7 @@ Colour reference used across our apps:
 
 **The R1 caches creations by URL.** To force a fresh install after updates:
 
-1. Bump `?v=N` in `install.html`: `https://r1.youvebeenpwnd.com/my-slug/?v=2`
+1. Bump `?v=N` in `install.html`: `https://your-domain.com/my-slug/?v=2`
 2. Regenerate and scan the new QR code
 3. The old installed version keeps running until the user rescans
 
@@ -549,20 +549,26 @@ The `index.html` itself is not cached between loads — only the initial install
 
 ## Deployment
 
-Server: `root@hilton-droplet`, served from `/root/r1/` at `https://r1.youvebeenpwnd.com`
+Each creation is a plain HTML file — no build step, no dependencies. Any static host works.
 
+**Netlify (recommended — free, drag and drop):**
+1. Go to [netlify.com](https://netlify.com) and drag your app folder onto the dashboard
+2. Netlify gives you a URL like `https://my-app.netlify.app`
+3. Update `install.html` with that URL and regenerate your QR
+
+**GitHub Pages (free, version controlled):**
+1. Push your app folder to a GitHub repo
+2. Go to Settings → Pages → set source to your branch
+3. Your URL will be `https://username.github.io/repo-name/app-name/`
+
+**Your own server:**
 ```bash
-# Create new creation
-ssh root@hilton-droplet "mkdir -p /root/r1/my-slug"
+# Copy files to your server
+scp index.html install.html user@your-server:/var/www/my-slug/
 
-# Deploy files
-scp index.html install.html root@hilton-droplet:/root/r1/my-slug/
-
-# Verify
-curl -sk -o /dev/null -w "%{http_code}" https://r1.youvebeenpwnd.com/my-slug/
+# Verify it's live
+curl -sk -o /dev/null -w "%{http_code}" https://your-domain.com/my-slug/
 ```
-
-No nginx changes needed — the Python web server serves all subdirectories automatically.
 
 ---
 
