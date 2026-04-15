@@ -24,6 +24,28 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/shopping-list.png" width="120"/><br/><sub>Shopping List</sub></td>
+    <td align="center"><img src="screenshots/todo.png" width="120"/><br/><sub>Todo</sub></td>
+    <td align="center"><img src="screenshots/notes.png" width="120"/><br/><sub>Notes</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/rep-tracker.png" width="120"/><br/><sub>Rep Tracker</sub></td>
+    <td align="center"><img src="screenshots/rep-timer.png" width="120"/><br/><sub>Rep Timer</sub></td>
+    <td align="center"><img src="screenshots/spirit-level.png" width="120"/><br/><sub>Spirit Level</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/dice-roller.png" width="120"/><br/><sub>Dice Roller</sub></td>
+    <td align="center"><img src="screenshots/r1-buddy.png" width="120"/><br/><sub>R1 Buddy</sub></td>
+    <td align="center"><img src="screenshots/gemma-chat.png" width="120"/><br/><sub>R1 Chat</sub></td>
+  </tr>
+</table>
+
+---
+
 ## How to use
 
 These apps are **templates** — you host them yourself. Nothing is shared or tracked.
