@@ -2,7 +2,7 @@
 
 A collection of custom creations for the Rabbit R1, built from scratch using the native R1 SDK. Voice input, accelerometer, scroll wheel, keyboard editing — all working.
 
-Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) covering everything the official docs don't — hard-won from building these apps.
+Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of everything figured out building these apps, from voice input and keyboard handling to shake detection, accelerometer, storage and LLM integration.
 
 > **New here?** Check out [SETUP_PROMPT.md](SETUP_PROMPT.md) — a prompt you can paste straight into Claude, ChatGPT, or any AI assistant and have it walk you through the entire setup process.
 
@@ -82,7 +82,7 @@ Regenerate the QR and rescan.
 
 ## Tips & Tricks
 
-See [R1_CREATION_TIPS.md](R1_CREATION_TIPS.md) for everything the official docs don't cover — voice input, keyboard handling, accelerometer, shake detection, storage, LLM integration, and more.
+See [R1_CREATION_TIPS.md](R1_CREATION_TIPS.md) — a running log of everything figured out building these apps. Covers voice input, keyboard handling, accelerometer, shake detection, storage, LLM integration, and more.
 
 ---
 
