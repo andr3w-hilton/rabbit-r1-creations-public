@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install Dice Roller</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px;
+}
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+.sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 30px; text-align: center; }
+#qr { margin-bottom: 20px; border-radius: 12px; overflow: hidden; }
+.url { font-size: 10px; color: rgba(255,255,255,0.25); word-break: break-all; text-align: center; max-width: 300px; }
+</style>
+</head>
+<body>
+<h1>Dice Roller</h1>
+<p class="sub">Scan with your Rabbit R1 to install.</p>
+<div id="qr"></div>
+<div class="url" id="url-label"></div>
+<script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+<script>
+var creationUrl = 'https://your-domain.com/dice-roller/';
+document.getElementById('url-label').textContent = creationUrl;
+
+var qrData = JSON.stringify({
+  title: "Dice Roller",
+  url: creationUrl,
+  description: "Fighting Fantasy dice roller. Shake to roll, scroll to choose die type, side button for 2-dice mode.",
+  iconUrl: "",
+  themeColor: "#ffffff"
+});
+
+var qrCode = new QRCodeStyling({
+  width: 260, height: 260,
+  data: qrData,
+  dotsOptions:          { color: "#ffffff", type: "rounded" },
+  backgroundOptions:    { color: "#0e0e10" },
+  cornersSquareOptions: { color: "#ffffff", type: "extra-rounded" },
+  cornersDotOptions:    { color: "#ffffff" }
+});
+qrCode.append(document.getElementById('qr'));
+</script>
+</body>
+</html>

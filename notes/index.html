@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,height=282,user-scalable=no">
+<title>Notes</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  -webkit-user-select: none; user-select: none;
+}
+
+/* ── List screen ── */
+#list-screen { width: 240px; height: 282px; display: flex; flex-direction: column; }
+
+#topbar {
+  height: 28px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+#topbar-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.35); }
+#note-count { font-size: 9px; color: rgba(254,80,0,0.6); font-weight: 700; }
+
+#notes-viewport { flex: 1; overflow: hidden; position: relative; }
+#notes-list { position: absolute; top: 0; left: 0; right: 8px; }
+
+.note-row {
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  min-height: 54px;
+}
+.note-row.pressing { background: rgba(254,80,0,0.08); }
+.note-title { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.note-preview { font-size: 10px; color: rgba(255,255,255,0.32); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.note-meta { font-size: 8px; color: rgba(255,255,255,0.16); }
+
+#empty-state {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px;
+}
+#empty-state.hidden { display: none; }
+#empty-label { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.7; }
+
+#bottombar {
+  height: 22px; display: flex; align-items: center; justify-content: center;
+  border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+}
+#hint { font-size: 8px; color: rgba(255,255,255,0.16); letter-spacing: 0.5px; }
+
+/* Scrollbar */
+#scrollbar {
+  position: absolute; right: 2px; top: 4px; bottom: 4px;
+  width: 2px; background: rgba(255,255,255,0.05); border-radius: 2px; opacity: 0;
+  transition: opacity 0.3s;
+}
+#scrollbar-thumb {
+  position: absolute; left: 0; right: 0;
+  background: rgba(254,80,0,0.45); border-radius: 2px;
+}
+
+/* ── Edit screen ── */
+#edit-screen {
+  display: none; position: absolute; inset: 0; z-index: 100;
+  background: #0e0e10; flex-direction: column; padding: 10px 12px;
+}
+#edit-screen.visible { display: flex; }
+#edit-header {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(255,255,255,0.3); margin-bottom: 8px; flex-shrink: 0;
+}
+#edit-input {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+  color: #fff; font-size: 13px; font-family: inherit;
+  padding: 8px; resize: none; outline: none; line-height: 1.55;
+  margin-bottom: 8px;
+}
+#edit-input:focus { border-color: rgba(254,80,0,0.4); }
+#edit-actions { display: flex; gap: 5px; flex-shrink: 0; }
+#edit-actions button {
+  padding: 7px 0; border-radius: 6px; border: none;
+  font-family: inherit; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px; cursor: pointer; outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#btn-export { flex: 0 0 38px; background: rgba(254,80,0,0.12); color: rgba(254,80,0,0.75); border: 1px solid rgba(254,80,0,0.25) !important; }
+#btn-cancel { flex: 1; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.45); }
+#btn-save   { flex: 1.2; background: #FE5000; color: #fff; }
+
+/* ── Listening overlay ── */
+#listen-overlay {
+  display: none; position: absolute; inset: 0; z-index: 200;
+  background: rgba(14,14,16,0.97);
+  flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+#listen-overlay.visible { display: flex; }
+#listen-ring {
+  width: 58px; height: 58px; border-radius: 50%;
+  border: 2px solid rgba(254,80,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  animation: pulse 1s ease-in-out infinite;
+}
+#listen-dot { width: 18px; height: 18px; border-radius: 50%; background: #FE5000; }
+@keyframes pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(254,80,0,0.3); }
+  50%      { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(254,80,0,0); }
+}
+#listen-label { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; color: rgba(255,255,255,0.4); }
+#listen-hint  { font-size: 9px; color: rgba(255,255,255,0.18); }
+
+/* ── Export QR overlay ── */
+#export-overlay {
+  display: none; position: absolute; inset: 0; z-index: 300;
+  background: #0e0e10;
+  flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+}
+#export-overlay.visible { display: flex; }
+#export-label   { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.28); }
+#export-qr      { width: 160px; height: 160px; }
+#export-preview {
+  font-size: 8px; color: rgba(254,80,0,0.45); text-align: center;
+  padding: 0 18px; max-width: 240px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#export-too-long { font-size: 8px; color: rgba(255,80,0,0.5); display: none; }
+#export-close   { font-size: 9px; color: rgba(255,255,255,0.16); }
+</style>
+</head>
+<body>
+
+<!-- List screen -->
+<div id="list-screen">
+  <div id="topbar">
+    <span id="topbar-title">NOTES</span>
+    <span id="note-count"></span>
+  </div>
+  <div id="notes-viewport">
+    <div id="notes-list"></div>
+    <div id="scrollbar"><div id="scrollbar-thumb"></div></div>
+    <div id="empty-state">
+      <div id="empty-label">No notes yet<br>Side click to type · hold to speak</div>
+    </div>
+  </div>
+  <div id="bottombar">
+    <span id="hint">click · new &nbsp;·&nbsp; hold · voice &nbsp;·&nbsp; hold note · delete</span>
+  </div>
+</div>
+
+<!-- Edit screen -->
+<div id="edit-screen">
+  <div id="edit-header">NEW NOTE</div>
+  <textarea id="edit-input" placeholder="Start typing..."></textarea>
+  <div id="edit-actions">
+    <button id="btn-export">QR</button>
+    <button id="btn-cancel">Cancel</button>
+    <button id="btn-save">Save</button>
+  </div>
+</div>
+
+<!-- Listening overlay -->
+<div id="listen-overlay">
+  <div id="listen-ring"><div id="listen-dot"></div></div>
+  <div id="listen-label">LISTENING</div>
+  <div id="listen-hint">release to stop</div>
+</div>
+
+<!-- Export QR overlay -->
+<div id="export-overlay">
+  <div id="export-label">SCAN TO READ</div>
+  <canvas id="export-qr" width="160" height="160"></canvas>
+  <div id="export-preview"></div>
+  <div id="export-too-long">Note truncated to fit QR</div>
+  <div id="export-close">tap to close</div>
+</div>
+
+<script>
+// ── Storage ───────────────────────────────────────────────────────────
+function loadNotes() {
+  try { return JSON.parse(localStorage.getItem('r1_notes') || '[]'); } catch(e) { return []; }
+}
+function saveNotes() {
+  localStorage.setItem('r1_notes', JSON.stringify(notes));
+}
+
+var notes = loadNotes();
+
+// ── State ─────────────────────────────────────────────────────────────
+var scrollOffset = 0;
+var editingId    = null;
+var isListening  = false;
+
+var ROW_H      = 54;
+var VIEWPORT_H = 232; // 282 - 28 topbar - 22 bottombar
+var QR_MAX     = 800; // safe character limit for QR text payload
+
+// ── Elements ──────────────────────────────────────────────────────────
+var $listScreen    = document.getElementById('list-screen');
+var $editScreen    = document.getElementById('edit-screen');
+var $listenOverlay = document.getElementById('listen-overlay');
+var $exportOverlay = document.getElementById('export-overlay');
+var $notesList     = document.getElementById('notes-list');
+var $emptyState    = document.getElementById('empty-state');
+var $noteCount     = document.getElementById('note-count');
+var $editHeader    = document.getElementById('edit-header');
+var $editInput     = document.getElementById('edit-input');
+var $scrollbar     = document.getElementById('scrollbar');
+var $scrollThumb   = document.getElementById('scrollbar-thumb');
+var $exportQr      = document.getElementById('export-qr');
+var $exportPreview = document.getElementById('export-preview');
+var $exportTooLong = document.getElementById('export-too-long');
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function noteTitle(text) {
+  return (text || '').split('\n')[0].trim() || 'Untitled';
+}
+function notePreview(text) {
+  var lines = (text || '').split('\n');
+  var rest = lines.slice(1).join(' ').trim();
+  if (!rest) rest = lines[0].slice(noteTitle(text).length).trim();
+  return rest.slice(0, 80);
+}
+function formatDate(ts) {
+  var d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString())
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+function render() {
+  $notesList.innerHTML = '';
+  $noteCount.textContent = notes.length ? notes.length + (notes.length === 1 ? ' note' : ' notes') : '';
+  $emptyState.classList.toggle('hidden', notes.length > 0);
+
+  var maxScroll = Math.max(0, notes.length * ROW_H - VIEWPORT_H);
+  scrollOffset = Math.min(scrollOffset, maxScroll);
+  $notesList.style.transform = 'translateY(-' + scrollOffset + 'px)';
+
+  notes.forEach(function(note) {
+    var row = document.createElement('div');
+    row.className = 'note-row';
+    row.dataset.id = note.id;
+    row.innerHTML =
+      '<div class="note-title">' + esc(noteTitle(note.text)) + '</div>' +
+      '<div class="note-preview">' + esc(notePreview(note.text)) + '</div>' +
+      '<div class="note-meta">' + formatDate(note.updated || note.created) + '</div>';
+    attachRowEvents(row, note.id);
+    $notesList.appendChild(row);
+  });
+
+  updateScrollbar();
+}
+
+function updateScrollbar() {
+  var total = notes.length * ROW_H;
+  if (total <= VIEWPORT_H) { $scrollbar.style.opacity = '0'; return; }
+  $scrollbar.style.opacity = '1';
+  var thumbH   = Math.max(20, VIEWPORT_H * (VIEWPORT_H / total));
+  var maxTop   = VIEWPORT_H - thumbH - 8;
+  var thumbTop = notes.length > 1 ? (scrollOffset / (total - VIEWPORT_H)) * maxTop : 0;
+  $scrollThumb.style.height = thumbH + 'px';
+  $scrollThumb.style.top    = thumbTop + 'px';
+}
+
+// ── Row touch events ──────────────────────────────────────────────────
+function attachRowEvents(row, id) {
+  var pressTimer = null, longFired = false, lastTap = 0, singleTimer = null;
+
+  row.addEventListener('pointerdown', function() {
+    row.classList.add('pressing');
+    longFired = false;
+    pressTimer = setTimeout(function() {
+      longFired = true;
+      row.classList.remove('pressing');
+      deleteNote(id);
+    }, 600);
+  });
+
+  row.addEventListener('pointerup', function() {
+    row.classList.remove('pressing');
+    clearTimeout(pressTimer);
+    if (longFired) return;
+    var now = Date.now();
+    if (now - lastTap < 320) {
+      clearTimeout(singleTimer);
+      lastTap = 0;
+      openEdit(id);
+      return;
+    }
+    lastTap = now;
+    singleTimer = setTimeout(function() { lastTap = 0; }, 320);
+  });
+
+  row.addEventListener('pointerleave',  function() { row.classList.remove('pressing'); clearTimeout(pressTimer); });
+  row.addEventListener('pointercancel', function() { row.classList.remove('pressing'); clearTimeout(pressTimer); });
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────
+function deleteNote(id) {
+  notes = notes.filter(function(n) { return n.id !== id; });
+  saveNotes();
+  render();
+}
+
+function openEdit(id) {
+  $editInput.blur();
+  if (id) {
+    var note = notes.find(function(n) { return n.id === id; });
+    if (!note) return;
+    editingId = id;
+    $editHeader.textContent = 'EDIT NOTE';
+    $editInput.value = note.text;
+  } else {
+    editingId = null;
+    $editHeader.textContent = 'NEW NOTE';
+    $editInput.value = '';
+  }
+  $editScreen.classList.add('visible');
+  setTimeout(function() { $editInput.focus(); }, 60);
+}
+
+function closeEdit() {
+  $editInput.blur();
+  $editScreen.classList.remove('visible');
+  editingId = null;
+}
+
+function saveNote() {
+  var text = $editInput.value.trim();
+  if (!text) { closeEdit(); return; }
+  if (editingId) {
+    var note = notes.find(function(n) { return n.id === editingId; });
+    if (note) { note.text = text; note.updated = Date.now(); }
+  } else {
+    notes.unshift({ id: genId(), text: text, created: Date.now(), updated: Date.now() });
+  }
+  saveNotes();
+  closeEdit();
+  render();
+}
+
+// ── Edit screen buttons ───────────────────────────────────────────────
+document.getElementById('btn-save').addEventListener('click', saveNote);
+document.getElementById('btn-cancel').addEventListener('click', closeEdit);
+document.getElementById('btn-export').addEventListener('click', function() {
+  var text = $editInput.value.trim();
+  if (text) showExportQR(text);
+});
+
+// ── Export QR ─────────────────────────────────────────────────────────
+function showExportQR(text) {
+  var payload = text;
+  var truncated = false;
+  if (payload.length > QR_MAX) {
+    payload = payload.slice(0, QR_MAX);
+    truncated = true;
+  }
+  $exportPreview.textContent = text.slice(0, 55) + (text.length > 55 ? '…' : '');
+  $exportTooLong.style.display = truncated ? 'block' : 'none';
+  drawQR($exportQr, payload);
+  $exportOverlay.classList.add('visible');
+}
+
+function hideExportQR() {
+  $exportOverlay.classList.remove('visible');
+}
+
+$exportOverlay.addEventListener('click', hideExportQR);
+
+function drawQR(canvas, data) {
+  var img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function() {
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0e0e10';
+    ctx.fillRect(0, 0, 160, 160);
+    ctx.drawImage(img, 0, 0, 160, 160);
+  };
+  img.onerror = function() {
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0e0e10';
+    ctx.fillRect(0, 0, 160, 160);
+    ctx.fillStyle = '#FE5000';
+    ctx.font = '8px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR unavailable', 80, 80);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=0e0e10&color=ffffff&data=' +
+    encodeURIComponent(data);
+}
+
+// ── Voice input ───────────────────────────────────────────────────────
+window.addEventListener('longPressStart', function() {
+  if ($editScreen.classList.contains('visible')) return;
+  if ($exportOverlay.classList.contains('visible')) return;
+  if (isListening) return;
+  isListening = true;
+  $listenOverlay.classList.add('visible');
+  if (typeof CreationVoiceHandler !== 'undefined') {
+    CreationVoiceHandler.postMessage('start');
+  }
+});
+
+window.addEventListener('longPressEnd', function() {
+  if (!isListening) return;
+  if (typeof CreationVoiceHandler !== 'undefined') {
+    CreationVoiceHandler.postMessage('stop');
+  }
+});
+
+window.onPluginMessage = function(data) {
+  if (data.type !== 'sttEnded') return;
+  isListening = false;
+  $listenOverlay.classList.remove('visible');
+  var transcript = (data.transcript || '').trim();
+  if (!transcript) return;
+  // Drop into edit screen so user can review/correct before saving
+  editingId = null;
+  $editHeader.textContent = 'NEW NOTE';
+  $editInput.value = transcript;
+  $editScreen.classList.add('visible');
+  setTimeout(function() { $editInput.focus(); }, 60);
+};
+
+// ── R1 native events ──────────────────────────────────────────────────
+window.addEventListener('sideClick', function() {
+  if ($exportOverlay.classList.contains('visible')) { hideExportQR(); return; }
+  if ($editScreen.classList.contains('visible'))    { saveNote(); return; }
+  if ($listenOverlay.classList.contains('visible')) return;
+  openEdit(null);
+});
+
+window.addEventListener('scrollUp', function() {
+  if ($editScreen.classList.contains('visible')) return;
+  scrollOffset = Math.max(0, scrollOffset - ROW_H);
+  render();
+});
+
+window.addEventListener('scrollDown', function() {
+  if ($editScreen.classList.contains('visible')) return;
+  var maxScroll = Math.max(0, notes.length * ROW_H - VIEWPORT_H);
+  scrollOffset = Math.min(maxScroll, scrollOffset + ROW_H);
+  render();
+});
+
+// ── Desktop keyboard fallbacks ────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape')    window.dispatchEvent(new Event('sideClick'));
+  if (e.key === 'ArrowUp')   window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+  if (e.key === ' ' && !e.repeat) window.dispatchEvent(new Event('longPressStart'));
+});
+document.addEventListener('keyup', function(e) {
+  if (e.key === ' ') window.dispatchEvent(new Event('longPressEnd'));
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

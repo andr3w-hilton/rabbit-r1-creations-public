@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,height=282,user-scalable=no">
+<title>Dice Roller</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10;
+  font-family: -apple-system, sans-serif;
+  -webkit-user-select: none; user-select: none;
+}
+
+/* ── Header ── */
+#hdr {
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid #1e1e20;
+}
+#hdr-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; color: #D97706;
+  text-transform: uppercase;
+}
+
+/* ── Die selector strip ── */
+#sel {
+  height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; padding: 0 7px;
+  background: #111113;
+  border-bottom: 1px solid #1e1e20;
+}
+.dpill {
+  flex: 1; height: 24px; border-radius: 5px;
+  background: #1c1c1e; color: #555;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #2a2a2e;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.dpill.on {
+  background: #1c1000;
+  color: #F59E0B;
+  border-color: #D97706;
+}
+
+/* ── Main die area ── */
+#main {
+  height: 174px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  18%  { transform: translateX(-7px); }
+  36%  { transform: translateX(7px); }
+  54%  { transform: translateX(-4px); }
+  72%  { transform: translateX(4px); }
+  90%  { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+#main.rolling { animation: shake 0.32s ease-out; }
+
+#die-svg { width: 240px; height: 174px; }
+
+/* ── Footer ── */
+#ftr {
+  height: 42px;
+  border-top: 1px solid #1e1e20;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+}
+#mode-lbl {
+  height: 13px;
+  font-size: 10px; font-weight: 700;
+  color: #D97706; letter-spacing: 1px; text-transform: uppercase;
+}
+#hint-lbl {
+  font-size: 9px; color: #333;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <span id="hdr-title">Dice Roller</span>
+</div>
+
+<div id="sel"></div>
+
+<div id="main">
+  <svg id="die-svg" viewBox="0 0 240 174">
+    <!-- Ghost die: offset behind main, only visible in 2-dice mode -->
+    <polygon id="die-ghost"
+      points=""
+      fill="#0c0c00"
+      stroke="#92400E"
+      stroke-width="1.5"
+      stroke-linejoin="round"
+      opacity="0"
+      transform="translate(9,7)" />
+    <!-- Main die -->
+    <polygon id="die-poly"
+      points=""
+      fill="#111108"
+      stroke="#D97706"
+      stroke-width="2"
+      stroke-linejoin="round" />
+    <!-- Result number (SVG attrs used — not CSS — for R1 WebView compat) -->
+    <text id="die-num"
+      x="120" y="80"
+      font-family="-apple-system, sans-serif"
+      font-weight="700"
+      font-size="60"
+      fill="#2a2a2e"
+      text-anchor="middle"
+      dominant-baseline="central">?</text>
+    <!-- Two-dice breakdown (e.g. "3  +  4") -->
+    <text id="die-sub"
+      x="120" y="155"
+      font-family="-apple-system, sans-serif"
+      font-weight="500"
+      font-size="11"
+      fill="#777"
+      text-anchor="middle"
+      dominant-baseline="central"
+      letter-spacing="1"></text>
+  </svg>
+</div>
+
+<div id="ftr">
+  <div id="mode-lbl"></div>
+  <div id="hint-lbl">shake &middot; scroll &middot; side btn</div>
+</div>
+
+<script>
+var DICE = [
+  { sides: 4,  label: 'd4',  n: 3, rot: -Math.PI / 2  }, // triangle, point up
+  { sides: 6,  label: 'd6',  n: 4, rot: -Math.PI / 4  }, // square, flat top
+  { sides: 8,  label: 'd8',  n: 4, rot:  0             }, // diamond
+  { sides: 10, label: 'd10', n: 5, rot: -Math.PI / 2  }, // pentagon, point up
+  { sides: 12, label: 'd12', n: 6, rot:  0             }, // hexagon, flat sides
+  { sides: 20, label: 'd20', n: 8, rot: -Math.PI / 8  }, // octagon
+];
+
+var dieIdx  = 1;   // default d6
+var multi   = 1;   // 1 or 2 dice
+var results = [];
+var rolling = false;
+var flashTimer = null;
+
+// Shake detection
+var canShake = true;
+var px = 0, py = 0, pz = 0, firstRead = true;
+
+function polyPts(n, cx, cy, r, rot) {
+  var pts = [];
+  for (var i = 0; i < n; i++) {
+    var a = rot + 2 * Math.PI * i / n;
+    pts.push(
+      (cx + r * Math.cos(a)).toFixed(1) + ',' +
+      (cy + r * Math.sin(a)).toFixed(1)
+    );
+  }
+  return pts.join(' ');
+}
+
+function rng(sides) {
+  return Math.floor(Math.random() * sides) + 1;
+}
+
+function buildSel() {
+  var sel = document.getElementById('sel');
+  sel.innerHTML = '';
+  DICE.forEach(function(d, i) {
+    var el = document.createElement('div');
+    el.className = 'dpill' + (i === dieIdx ? ' on' : '');
+    el.textContent = d.label;
+    (function(idx) {
+      el.addEventListener('pointerdown', function() {
+        dieIdx = idx;
+        results = [];
+        render();
+      });
+    })(i);
+    sel.appendChild(el);
+  });
+}
+
+function render() {
+  buildSel();
+
+  var d      = DICE[dieIdx];
+  var pts    = polyPts(d.n, 120, 80, 62, d.rot);
+  var poly   = document.getElementById('die-poly');
+  var ghost  = document.getElementById('die-ghost');
+  var numEl  = document.getElementById('die-num');
+  var subEl  = document.getElementById('die-sub');
+  var modeEl = document.getElementById('mode-lbl');
+
+  // Polygon shapes (ghost uses same pts, offset via transform attr)
+  poly.setAttribute('points', pts);
+  ghost.setAttribute('points', pts);
+
+  // 2-dice mode: show ghost die + mode label
+  if (multi === 2) {
+    ghost.setAttribute('opacity', '0.55');
+    modeEl.textContent = '2 \u00D7 ' + d.label;
+  } else {
+    ghost.setAttribute('opacity', '0');
+    modeEl.textContent = '';
+  }
+
+  // Result display — use setAttribute, NOT .style, for SVG text on R1 WebView
+  if (results.length === 0) {
+    numEl.setAttribute('font-size', '60');
+    numEl.setAttribute('fill', '#2a2a2e');
+    numEl.textContent = '?';
+    subEl.textContent = '';
+  } else if (multi === 1) {
+    var v = results[0];
+    numEl.setAttribute('font-size', v >= 10 ? '54' : '64');
+    numEl.setAttribute('fill', '#ffffff');
+    numEl.textContent = v;
+    subEl.textContent = '';
+  } else {
+    var total = results[0] + results[1];
+    numEl.setAttribute('font-size', total >= 10 ? '54' : '64');
+    numEl.setAttribute('fill', '#ffffff');
+    numEl.textContent = total;
+    subEl.setAttribute('fill', '#888888');
+    subEl.textContent = results[0] + '  +  ' + results[1];
+  }
+}
+
+function doRoll() {
+  if (rolling) return;
+  rolling = true;
+  results = [];
+
+  var d     = DICE[dieIdx];
+  var count = multi;
+  var numEl = document.getElementById('die-num');
+  var subEl = document.getElementById('die-sub');
+  var poly  = document.getElementById('die-poly');
+  var main  = document.getElementById('main');
+
+  // Shake animation on container
+  main.classList.remove('rolling');
+  void main.offsetWidth;
+  main.classList.add('rolling');
+
+  // Brighten stroke while rolling
+  poly.setAttribute('stroke', '#F59E0B');
+
+  var step = 0, STEPS = 10;
+  if (flashTimer) clearTimeout(flashTimer);
+
+  function flash() {
+    if (step < STEPS) {
+      numEl.setAttribute('fill', '#F59E0B');
+      if (count === 1) {
+        var v = rng(d.sides);
+        numEl.setAttribute('font-size', v >= 10 ? '54' : '64');
+        numEl.textContent = v;
+        subEl.textContent = '';
+      } else {
+        var r1 = rng(d.sides), r2 = rng(d.sides), tot = r1 + r2;
+        numEl.setAttribute('font-size', tot >= 10 ? '54' : '64');
+        numEl.textContent = tot;
+        subEl.setAttribute('fill', '#F59E0B');
+        subEl.textContent = r1 + '  +  ' + r2;
+      }
+      step++;
+      flashTimer = setTimeout(flash, 20 + step * 18);
+    } else {
+      var res = [];
+      for (var i = 0; i < count; i++) res.push(rng(d.sides));
+      results = res;
+      poly.setAttribute('stroke', '#D97706');
+      subEl.setAttribute('fill', '#888888');
+      render();
+      rolling = false;
+    }
+  }
+
+  flash();
+}
+
+// ── R1 hardware events ───────────────────────────────────────────────────────
+window.addEventListener('scrollUp', function() {
+  dieIdx = (dieIdx - 1 + DICE.length) % DICE.length;
+  results = [];
+  render();
+});
+
+window.addEventListener('scrollDown', function() {
+  dieIdx = (dieIdx + 1) % DICE.length;
+  results = [];
+  render();
+});
+
+window.addEventListener('sideClick', function() {
+  multi = multi === 1 ? 2 : 1;
+  results = [];
+  render();
+});
+
+window.addEventListener('longPressStart', function() {
+  doRoll();
+});
+
+// Tap the die to roll too (touch-friendly backup)
+document.getElementById('main').addEventListener('pointerdown', function() {
+  doRoll();
+});
+
+// ── Accelerometer shake detection ────────────────────────────────────────────
+// 60Hz for faster peak capture. Magnitude at rest ≈ 1.0 (gravity only).
+// Threshold 1.2 (was 1.3) — catches a moderate shake without false positives.
+// Jerk threshold 0.25 (was 0.3) — catches quick direction reversals.
+async function initAccel() {
+  if (typeof window.creationSensors === 'undefined') {
+    initMotion();
+    return;
+  }
+  try {
+    var available = await window.creationSensors.accelerometer.isAvailable();
+    if (!available) {
+      document.getElementById('hint-lbl').textContent = 'no sensor · scroll · side btn';
+      return;
+    }
+    firstRead = true;
+    var dbg = document.getElementById('dbg');
+    window.creationSensors.accelerometer.start(function(data) {
+      var mag = Math.sqrt(data.x*data.x + data.y*data.y + data.z*data.z);
+      var jmag = 0;
+      if (!firstRead) {
+        var jx = data.x - px, jy = data.y - py, jz = data.z - pz;
+        jmag = Math.sqrt(jx*jx + jy*jy + jz*jz);
+      }
+      px = data.x; py = data.y; pz = data.z;
+      firstRead = false;
+      // Show live values so we can calibrate the threshold
+      dbg.textContent = 'mag:' + mag.toFixed(2) + ' j:' + jmag.toFixed(3);
+      if (jmag > 0.08 && canShake) {
+        canShake = false;
+        doRoll();
+        setTimeout(function() { canShake = true; }, 1000);
+      }
+    }, { frequency: 60 });
+  } catch(e) {
+    document.getElementById('hint-lbl').textContent = 'sensor error · scroll · side btn';
+  }
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (typeof window.creationSensors === 'undefined') return;
+  if (document.hidden) {
+    try { window.creationSensors.accelerometer.stop(); } catch(e) {}
+  } else {
+    initAccel();
+  }
+});
+
+// ── DeviceMotionEvent fallback (if creationSensors not available) ─────────────
+// accelerationIncludingGravity is in m/s². At rest ≈ 9.8 on z-axis.
+// A hard shake spikes the jerk (delta between samples) well above 5 m/s².
+function initMotion() {
+  var mpx = null, mpy = null, mpz = null;
+  window.addEventListener('devicemotion', function(e) {
+    var a = e.accelerationIncludingGravity;
+    if (!a) return;
+    var x = a.x || 0, y = a.y || 0, z = a.z || 0;
+    if (mpx !== null) {
+      var jx = x - mpx, jy = y - mpy, jz = z - mpz;
+      var jmag = Math.sqrt(jx*jx + jy*jy + jz*jz);
+      if (jmag > 8 && canShake) {
+        canShake = false;
+        doRoll();
+        setTimeout(function() { canShake = true; }, 1000);
+      }
+    }
+    mpx = x; mpy = y; mpz = z;
+  });
+}
+
+// ── Keyboard fallbacks for desktop testing ───────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  window.dispatchEvent(new Event('scrollDown'));
+  if (e.key === ' ')   { e.preventDefault(); doRoll(); }
+  if (e.key === 'Enter') doRoll();
+  if (e.key === 's')   window.dispatchEvent(new Event('sideClick'));
+});
+
+render();
+initAccel();
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,height=282,user-scalable=no">
+<title>Rep Timer</title>
+<style>
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+:root {
+  --ex: #FE5000;
+  --ex-glow: rgba(254,80,0,0.35);
+  --re: #4CA3FE;
+  --re-glow: rgba(76,163,254,0.3);
+  --accent: var(--ex);
+  --glow: var(--ex-glow);
+}
+body.rest {
+  --accent: var(--re);
+  --glow: var(--re-glow);
+}
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+}
+#brand {
+  margin-top: 8px; font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.25); letter-spacing: 2px; text-transform: uppercase;
+}
+#round-row {
+  margin-top: 4px; display: flex; gap: 6px; align-items: center;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+#phase-tag { color: var(--accent); transition: color 0.4s; }
+#round-num { color: rgba(255,255,255,0.3); }
+#ring-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+}
+#ring-wrap { position: relative; width: 160px; height: 160px; }
+#ring-svg {
+  width: 160px; height: 160px;
+  transform: rotate(-90deg); overflow: visible;
+}
+.ring-track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 2; }
+#ring-fill {
+  fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: butt;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+  filter: drop-shadow(0 0 5px var(--accent));
+}
+#ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+}
+#digits {
+  font-size: 38px; font-weight: 700; letter-spacing: -0.03em;
+  line-height: 1; color: #fff;
+  text-shadow: 0 0 20px var(--glow); transition: text-shadow 0.5s;
+  font-variant-numeric: tabular-nums;
+}
+#next-up {
+  font-size: 7px; letter-spacing: 1.5px; color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+#durations {
+  width: 216px; display: flex; gap: 8px; margin-bottom: 6px;
+}
+.dur-card {
+  flex: 1; border: 1px solid rgba(255,255,255,0.07);
+  padding: 6px 0; display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+  transition: border-color 0.3s, background 0.3s;
+}
+.dur-card.selected {
+  border-color: var(--accent);
+  background: rgba(254,80,0,0.06);
+}
+body.rest .dur-card.selected {
+  background: rgba(76,163,254,0.06);
+}
+.dur-label {
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+.dur-card.selected .dur-label { color: var(--accent); }
+.dur-val { font-size: 16px; font-weight: 700; color: #fff; }
+#hint {
+  font-size: 7px; letter-spacing: 0.8px; color: rgba(255,255,255,0.18);
+  text-align: center; margin-bottom: 8px; text-transform: uppercase;
+}
+@keyframes flash {
+  0%,100% { opacity: 1; }
+  30%,70%  { opacity: 0.1; }
+}
+.flashing { animation: flash 0.4s ease; }
+</style>
+</head>
+<body>
+
+<div id="brand">REP TIMER</div>
+<div id="round-row">
+  <span id="phase-tag">EXERCISE</span>
+  <span id="round-num">· RND 1</span>
+</div>
+
+<div id="ring-area">
+  <div id="ring-wrap">
+    <svg id="ring-svg" viewBox="0 0 160 160">
+      <circle class="ring-track" cx="80" cy="80" r="68"/>
+      <circle id="ring-fill" cx="80" cy="80" r="68"/>
+    </svg>
+    <div id="ring-center">
+      <div id="digits">00:30</div>
+      <div id="next-up">REST NEXT</div>
+    </div>
+  </div>
+</div>
+
+<div id="durations">
+  <div class="dur-card selected" id="card-ex">
+    <div class="dur-label">Exercise</div>
+    <div class="dur-val" id="ex-val">30s</div>
+  </div>
+  <div class="dur-card" id="card-re">
+    <div class="dur-label">Rest</div>
+    <div class="dur-val" id="re-val">15s</div>
+  </div>
+</div>
+
+<div id="hint">TAP START · SCROLL ADJUST · SIDE SWITCH</div>
+
+<script>
+var exDur      = 30;
+var reDur      = 15;
+var phase      = 'ex';
+var left       = exDur;
+var total      = exDur;
+var round      = 1;
+var alive      = false;
+var timer      = null;
+var audio      = null;
+var adjusting  = 'ex';
+var phaseStart = null; // Date.now() when current phase began — for accurate timing
+
+// r=68 → C = 2π*68 ≈ 427.26
+var C = 2 * Math.PI * 68;
+
+var ringFill = document.getElementById('ring-fill');
+var digits   = document.getElementById('digits');
+var phaseTag = document.getElementById('phase-tag');
+var nextUp   = document.getElementById('next-up');
+var roundNum = document.getElementById('round-num');
+var exValEl  = document.getElementById('ex-val');
+var reValEl  = document.getElementById('re-val');
+var cardEx   = document.getElementById('card-ex');
+var cardRe   = document.getElementById('card-re');
+var hintEl   = document.getElementById('hint');
+
+ringFill.style.strokeDasharray  = C;
+ringFill.style.strokeDashoffset = 0;
+
+function fmt(s) {
+  var m = Math.floor(s / 60), sec = s % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function fmtDur(s) {
+  if (s < 60) return s + 's';
+  var m = Math.floor(s / 60), r = s % 60;
+  return r ? m + 'm' + r + 's' : m + 'm';
+}
+
+function getAudio() {
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === 'suspended') audio.resume();
+  return audio;
+}
+
+function beep() {
+  try {
+    var a = getAudio();
+    var oscs = [110, 115, 220].map(function(f) {
+      var o = a.createOscillator();
+      o.type = 'sawtooth'; o.frequency.value = f; return o;
+    });
+    var dist = a.createWaveShaper();
+    var curve = new Float32Array(512);
+    for (var i = 0; i < 512; i++) {
+      var x = (i * 2) / 512 - 1;
+      curve[i] = Math.tanh(x * 6);
+    }
+    dist.curve = curve;
+    var gain = a.createGain();
+    oscs.forEach(function(o) { o.connect(dist); });
+    dist.connect(gain); gain.connect(a.destination);
+    gain.gain.setValueAtTime(0, a.currentTime);
+    gain.gain.linearRampToValueAtTime(0.6, a.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.6, a.currentTime + 1.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 1.7);
+    oscs.forEach(function(o) { o.start(a.currentTime); o.stop(a.currentTime + 1.8); });
+  } catch(e) {}
+}
+
+function render() {
+  digits.textContent = fmt(left);
+  var ratio = total > 0 ? left / total : 0;
+  ringFill.style.strokeDashoffset = C * (1 - ratio);
+
+  var isEx = phase === 'ex';
+  phaseTag.textContent = isEx ? 'EXERCISE' : 'REST';
+  nextUp.textContent   = isEx ? 'REST NEXT' : 'EXERCISE NEXT';
+  document.body.className = isEx ? '' : 'rest';
+  roundNum.textContent = '· RND ' + round;
+  exValEl.textContent = fmtDur(exDur);
+  reValEl.textContent = fmtDur(reDur);
+  cardEx.classList.toggle('selected', adjusting === 'ex');
+  cardRe.classList.toggle('selected', adjusting === 're');
+}
+
+function tick() {
+  if (!alive || !phaseStart) return;
+  var elapsed = Math.floor((Date.now() - phaseStart) / 1000);
+  left = Math.max(0, total - elapsed);
+
+  if (left <= 0) {
+    beep();
+    digits.classList.add('flashing');
+    setTimeout(function() { digits.classList.remove('flashing'); }, 500);
+
+    if (phase === 'ex') {
+      phase = 're'; total = reDur; left = reDur; adjusting = 're';
+    } else {
+      phase = 'ex'; total = exDur; left = exDur; round++; adjusting = 'ex';
+    }
+    phaseStart = Date.now();
+    ringFill.style.transition = 'none';
+    ringFill.style.strokeDashoffset = 0;
+    requestAnimationFrame(function() {
+      ringFill.style.transition = 'stroke-dashoffset 1s linear, stroke 0.5s ease';
+      render();
+    });
+  } else {
+    render();
+  }
+}
+
+function toggle() {
+  getAudio();
+  if (alive) {
+    alive = false;
+    clearInterval(timer);
+    phaseStart = null;
+    hintEl.textContent = 'TAP START · SCROLL ADJUST · SIDE SWITCH';
+  } else {
+    if (exDur === 0 || reDur === 0) return;
+    alive = true;
+    // Account for time already elapsed in this phase if resuming mid-phase
+    phaseStart = Date.now() - (total - left) * 1000;
+    hintEl.textContent = 'TAP PAUSE · HOLD RESET';
+    timer = setInterval(tick, 250); // 250ms ticks — catches up fast after suspension
+  }
+}
+
+function doReset() {
+  alive = false;
+  clearInterval(timer);
+  phaseStart = null;
+  phase = 'ex'; left = exDur; total = exDur; round = 1; adjusting = 'ex';
+  hintEl.textContent = 'TAP START · SCROLL ADJUST · SIDE SWITCH';
+  ringFill.style.transition = 'none';
+  ringFill.style.strokeDashoffset = 0;
+  requestAnimationFrame(function() {
+    ringFill.style.transition = 'stroke-dashoffset 1s linear, stroke 0.5s ease';
+    render();
+  });
+}
+
+function adjust(delta) {
+  if (alive) return;
+  if (adjusting === 'ex') {
+    exDur = Math.max(5, exDur + delta);
+    if (phase === 'ex') { left = exDur; total = exDur; }
+  } else {
+    reDur = Math.max(5, reDur + delta);
+    if (phase === 're') { left = reDur; total = reDur; }
+  }
+  render();
+}
+
+// Touch / click
+document.body.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  toggle();
+});
+document.body.addEventListener('click', toggle);
+
+// R1 native events
+window.addEventListener('sideClick', function() {
+  if (alive) return;
+  adjusting = adjusting === 'ex' ? 're' : 'ex';
+  render();
+});
+
+window.addEventListener('scrollUp',   function() { adjust(5); });
+window.addEventListener('scrollDown', function() { adjust(-5); });
+
+var longTimer = null;
+window.addEventListener('longPressStart', function() {
+  longTimer = setTimeout(doReset, 600);
+});
+window.addEventListener('longPressEnd', function() {
+  clearTimeout(longTimer);
+});
+
+// Catch up immediately when page becomes visible after suspension
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && alive) tick();
+});
+
+// Keyboard fallbacks for desktop testing
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape')    window.dispatchEvent(new Event('sideClick'));
+  if (e.key === 'ArrowUp')   window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+  if (e.key === ' ')         { e.preventDefault(); toggle(); }
+  if (e.key === 'r')         doReset();
+});
+
+render();
+</script>
+</body>
+</html>

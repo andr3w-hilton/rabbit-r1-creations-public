@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no">
+<title>Todo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none;
+}
+
+#header {
+  padding: 7px 12px 6px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(254,80,0,0.25);
+  flex-shrink: 0;
+}
+#list-name {
+  font-size: 11px; font-weight: 700; color: #FE5000;
+  letter-spacing: 2px; text-transform: uppercase;
+  min-width: 56px;
+}
+#dots { display: flex; gap: 5px; align-items: center; }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.2s, transform 0.2s;
+}
+.dot.active { background: #FE5000; transform: scale(1.2); }
+#item-count { font-size: 10px; color: rgba(255,255,255,0.3); min-width: 36px; text-align: right; }
+
+#status {
+  padding: 0 12px; font-size: 10px; color: rgba(255,255,255,0.35);
+  text-align: center; flex-shrink: 0; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+#status.listening { color: #FE5000; animation: pulse 0.8s ease infinite; }
+#status.cycling { color: rgba(255,255,255,0.6); }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+#list-container { flex: 1; overflow: hidden; position: relative; }
+#list { position: absolute; top: 0; left: 0; right: 0; transition: transform 0.12s ease; }
+
+.item { display: flex; align-items: center; padding: 0 12px 0 10px; height: 32px; gap: 10px; }
+.item.checked { opacity: 0.4; }
+
+.checkbox {
+  width: 18px; height: 18px; border: 2px solid #FE5000; border-radius: 3px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.12s; position: relative;
+}
+.item.checked .checkbox { background: #FE5000; }
+.checkbox::after {
+  content: ''; display: none; width: 10px; height: 6px;
+  border-left: 2px solid #0e0e10; border-bottom: 2px solid #0e0e10;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.item.checked .checkbox::after { display: block; }
+.item-text {
+  font-size: 13px; color: #fff; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.item.checked .item-text { text-decoration: line-through; color: rgba(255,255,255,0.4); }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 220px; gap: 10px; }
+.empty-text { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.6; }
+
+#scrollbar { position: absolute; right: 3px; top: 4px; bottom: 4px; width: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; display: none; }
+#scroll-thumb { position: absolute; left: 0; width: 3px; background: #FE5000; border-radius: 2px; opacity: 0.7; }
+
+/* Edit screen */
+#edit-screen {
+  display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: #0e0e10; flex-direction: column; padding: 14px; z-index: 150;
+}
+#edit-screen.visible { display: flex; }
+#edit-header {
+  font-size: 11px; font-weight: 700; color: #FE5000;
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; padding: 2px 0;
+}
+#edit-input {
+  flex: 1; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+  color: #fff; font-size: 13px; font-family: inherit;
+  padding: 8px; resize: none; outline: none; line-height: 1.5;
+}
+#edit-input:focus { border-color: #FE5000; }
+#edit-actions { display: flex; gap: 8px; margin-top: 10px; }
+#edit-actions button {
+  flex: 1; min-height: 36px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#edit-actions button:active { opacity: 0.7; }
+#edit-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+#edit-save { background: #FE5000; color: #0e0e10; }
+
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="list-name">Home</div>
+  <div id="dots">
+    <div class="dot active" data-i="0"></div>
+    <div class="dot" data-i="1"></div>
+    <div class="dot" data-i="2"></div>
+  </div>
+  <div id="item-count"></div>
+</div>
+<div id="status">Hold side button to add item</div>
+<div id="list-container">
+  <div id="list"></div>
+  <div id="scrollbar"><div id="scroll-thumb"></div></div>
+</div>
+
+<div id="edit-screen">
+  <div id="edit-header">Edit Item</div>
+  <textarea id="edit-input"></textarea>
+  <div id="edit-actions">
+    <button id="edit-cancel">Cancel</button>
+    <button id="edit-save">Save</button>
+  </div>
+</div>
+
+<script>
+var REMOVE_AFTER_MS = 3 * 60 * 60 * 1000;
+var ITEM_HEIGHT = 32;
+var VISIBLE_ITEMS = 7;
+
+var LISTS = [
+  { key: 'home',  label: 'Home'   },
+  { key: 'aidev', label: 'AI Dev' },
+  { key: 'rnd',   label: 'Random' }
+];
+
+var currentList = 0;
+var scrollOffset = 0;
+var isListening = false;
+
+// ── Storage ──────────────────────────────────────────────────────────────
+function storageKey(idx) { return 'r1_todo_' + LISTS[idx].key; }
+
+function saveItems(items, idx) {
+  try { localStorage.setItem(storageKey(idx), JSON.stringify(items)); } catch(e) {}
+}
+function loadItems(idx) {
+  try { var r = localStorage.getItem(storageKey(idx)); return r ? JSON.parse(r) : []; }
+  catch(e) { return []; }
+}
+function purgeExpired(items) {
+  var now = Date.now();
+  return items.filter(function(i) { return !i.checked || (now - i.checkedAt) < REMOVE_AFTER_MS; });
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function render() {
+  var items = loadItems(currentList);
+  var list = document.getElementById('list');
+  var countEl = document.getElementById('item-count');
+  var scrollbar = document.getElementById('scrollbar');
+
+  // Update header
+  document.getElementById('list-name').textContent = LISTS[currentList].label;
+  document.querySelectorAll('.dot').forEach(function(d) {
+    d.className = 'dot' + (parseInt(d.dataset.i) === currentList ? ' active' : '');
+  });
+
+  var unchecked = items.filter(function(i) { return !i.checked; }).length;
+  countEl.textContent = unchecked > 0 ? unchecked + ' left' : (items.length > 0 ? 'all done' : '');
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state">'
+      + '<div class="empty-text">Nothing here yet<br>Press side button to add</div></div>';
+    scrollbar.style.display = 'none';
+    return;
+  }
+
+  var maxScroll = Math.max(0, items.length - VISIBLE_ITEMS);
+  scrollOffset = Math.min(Math.max(0, scrollOffset), maxScroll);
+
+  if (items.length > VISIBLE_ITEMS) {
+    scrollbar.style.display = 'block';
+    var barH = ITEM_HEIGHT * VISIBLE_ITEMS;
+    scrollbar.style.height = barH + 'px';
+    var thumbH = Math.max(20, Math.round((VISIBLE_ITEMS / items.length) * barH));
+    var thumbTop = Math.round((scrollOffset / Math.max(1, items.length - 1)) * (barH - thumbH));
+    var thumb = document.getElementById('scroll-thumb');
+    thumb.style.height = thumbH + 'px';
+    thumb.style.top = thumbTop + 'px';
+  } else {
+    scrollbar.style.display = 'none';
+  }
+
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var div = document.createElement('div');
+    div.className = 'item' + (item.checked ? ' checked' : '');
+    div.dataset.id = item.id;
+    var cb = document.createElement('div');
+    cb.className = 'checkbox'; cb.dataset.id = item.id;
+    var txt = document.createElement('div');
+    txt.className = 'item-text'; txt.textContent = item.text;
+    div.appendChild(cb); div.appendChild(txt);
+    frag.appendChild(div);
+  }
+  list.innerHTML = '';
+  list.appendChild(frag);
+  list.style.transform = 'translateY(-' + (scrollOffset * ITEM_HEIGHT) + 'px)';
+
+  list.querySelectorAll('.checkbox').forEach(function(cb) {
+    cb.addEventListener('click', function(e) { e.stopPropagation(); toggleItem(cb.dataset.id); });
+    cb.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); toggleItem(cb.dataset.id); });
+  });
+
+  list.querySelectorAll('.item').forEach(function(row) {
+    var pressTimer = null;
+    var longFired = false;
+    var lastTap = 0;
+    var singleTimer = null;
+
+    row.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.checkbox')) return;
+      longFired = false;
+      pressTimer = setTimeout(function() {
+        longFired = true;
+        deleteItem(row.dataset.id);
+      }, 600);
+    });
+
+    row.addEventListener('pointerup', function(e) {
+      if (e.target.closest('.checkbox')) return;
+      clearTimeout(pressTimer);
+      if (longFired) return;
+      var now = Date.now();
+      if (now - lastTap < 320) {
+        clearTimeout(singleTimer);
+        lastTap = 0;
+        editItem(row.dataset.id);
+        return;
+      }
+      lastTap = now;
+      singleTimer = setTimeout(function() { lastTap = 0; }, 320);
+    });
+
+    row.addEventListener('pointerleave', function() { clearTimeout(pressTimer); });
+    row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
+  });
+}
+
+function toggleItem(id) {
+  var items = loadItems(currentList);
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === id) {
+      items[i].checked = !items[i].checked;
+      items[i].checkedAt = items[i].checked ? Date.now() : null;
+      break;
+    }
+  }
+  saveItems(items, currentList);
+  render();
+}
+
+function deleteItem(id) {
+  var items = loadItems(currentList).filter(function(i) { return i.id !== id; });
+  saveItems(items, currentList);
+  render();
+  setStatus('Deleted', '');
+  resetStatus();
+}
+
+// ── Edit item (keyboard) ─────────────────────────────────────────────────
+var editingId = null;
+var $editScreen = document.getElementById('edit-screen');
+var $editInput = document.getElementById('edit-input');
+
+function editItem(id) {
+  var items = loadItems(currentList);
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === id) {
+      editingId = id;
+      $editInput.value = items[i].text;
+      $editScreen.classList.add('visible');
+      $editInput.focus();
+      return;
+    }
+  }
+}
+
+function closeEdit() {
+  editingId = null;
+  $editScreen.classList.remove('visible');
+  $editInput.blur();
+}
+
+document.getElementById('edit-save').addEventListener('click', function() {
+  if (!editingId) return;
+  var text = $editInput.value.trim();
+  if (!text) { closeEdit(); return; }
+  var items = loadItems(currentList);
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === editingId) { items[i].text = text; break; }
+  }
+  saveItems(items, currentList);
+  closeEdit();
+  render();
+});
+
+document.getElementById('edit-cancel').addEventListener('click', closeEdit);
+
+// ── Status ───────────────────────────────────────────────────────────────
+var statusTimer = null;
+function setStatus(msg, cls) {
+  if (statusTimer) clearTimeout(statusTimer);
+  var el = document.getElementById('status');
+  el.textContent = msg; el.className = cls || '';
+}
+function resetStatus() {
+  statusTimer = setTimeout(function() { setStatus('Hold side button to add item', ''); }, 2000);
+}
+
+// ── Transcript normalisation ─────────────────────────────────────────────
+// Deepgram smart-formats numbers as words ("20th" → "twentieth of April").
+// Convert them back to compact ordinal form.
+var ORDINALS = [
+  ['thirty first','31st'],['thirty second','32nd'],
+  ['twenty ninth','29th'],['twenty eighth','28th'],['twenty seventh','27th'],
+  ['twenty sixth','26th'],['twenty fifth','25th'],['twenty fourth','24th'],
+  ['twenty third','23rd'],['twenty second','22nd'],['twenty first','21st'],
+  ['twentieth','20th'],['nineteenth','19th'],['eighteenth','18th'],
+  ['seventeenth','17th'],['sixteenth','16th'],['fifteenth','15th'],
+  ['fourteenth','14th'],['thirteenth','13th'],['twelfth','12th'],
+  ['eleventh','11th'],['tenth','10th'],['ninth','9th'],['eighth','8th'],
+  ['seventh','7th'],['sixth','6th'],['fifth','5th'],['fourth','4th'],
+  ['third','3rd'],['second','2nd'],['first','1st'],['thirtieth','30th']
+];
+var MONTH_RE = 'january|february|march|april|may|june|july|august|september|october|november|december';
+
+function normalizeTranscript(text) {
+  // Replace ordinal words → ordinal digits (longest phrases first to avoid partial matches)
+  ORDINALS.forEach(function(pair) {
+    text = text.replace(new RegExp('\\b' + pair[0] + '\\b', 'gi'), pair[1]);
+  });
+  // Remove "of" that Deepgram inserts between ordinal and month ("20th of April" → "20th April")
+  text = text.replace(
+    new RegExp('(\\d+(?:st|nd|rd|th))\\s+of\\s+(' + MONTH_RE + ')', 'gi'),
+    '$1 $2'
+  );
+  return text;
+}
+
+// ── Add Item ─────────────────────────────────────────────────────────────
+function addItem(text) {
+  text = normalizeTranscript((text || '').trim()).replace(/[.!?,]+$/, '');
+  if (!text) { setStatus('Nothing heard \u2014 try again', ''); resetStatus(); return; }
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  var items = loadItems(currentList);
+  items.unshift({ id: Date.now().toString(), text: text, checked: false, checkedAt: null });
+  scrollOffset = 0;
+  saveItems(items, currentList);
+  render();
+  setStatus('\u2713 ' + text, '');
+  resetStatus();
+}
+
+// ── Cycle list ───────────────────────────────────────────────────────────
+function cycleList() {
+  currentList = (currentList + 1) % LISTS.length;
+  scrollOffset = 0;
+  render();
+  setStatus(LISTS[currentList].label, 'cycling');
+  resetStatus();
+}
+
+// ── Voice via CreationVoiceHandler ───────────────────────────────────────
+window.onPluginMessage = function(data) {
+  if (data.type !== 'sttEnded') return;
+  isListening = false;
+  var text = (data.transcript || '').trim();
+  if (text) addItem(text);
+  else { setStatus('Nothing heard \u2014 try again', ''); resetStatus(); }
+};
+
+// ── R1 Events ────────────────────────────────────────────────────────────
+window.addEventListener('longPressStart', function() {
+  if (isListening || $editScreen.classList.contains('visible')) return;
+  isListening = true;
+  setStatus('Listening\u2026 release to add', 'listening');
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('start');
+});
+window.addEventListener('longPressEnd', function() {
+  if (!isListening) return;
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('stop');
+});
+window.addEventListener('sideClick', function() {
+  if (isListening || $editScreen.classList.contains('visible')) return;
+  cycleList();
+});
+
+window.addEventListener('scrollUp', function() {
+  if (scrollOffset > 0) { scrollOffset--; render(); }
+});
+window.addEventListener('scrollDown', function() {
+  var items = loadItems(currentList);
+  if (scrollOffset < Math.max(0, items.length - VISIBLE_ITEMS)) { scrollOffset++; render(); }
+});
+
+// ── Keyboard fallbacks ───────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === ' ' && !e.repeat) window.dispatchEvent(new Event('longPressStart'));
+  if (e.key === 'Escape') window.dispatchEvent(new Event('sideClick'));
+  if (e.key === 'ArrowUp') window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+});
+document.addEventListener('keyup', function(e) {
+  if (e.key === ' ') window.dispatchEvent(new Event('longPressEnd'));
+});
+
+// ── Auto-purge ───────────────────────────────────────────────────────────
+setInterval(function() {
+  var changed = false;
+  for (var i = 0; i < LISTS.length; i++) {
+    var before = loadItems(i);
+    var after = purgeExpired(before);
+    if (after.length !== before.length) { saveItems(after, i); changed = true; }
+  }
+  if (changed) render();
+}, 5 * 60 * 1000);
+
+// ── Init ─────────────────────────────────────────────────────────────────
+// Purge expired on load for all lists
+for (var i = 0; i < LISTS.length; i++) {
+  var loaded = loadItems(i);
+  var purged = purgeExpired(loaded);
+  if (purged.length !== loaded.length) saveItems(purged, i);
+}
+render();
+</script>
+</body>
+</html>

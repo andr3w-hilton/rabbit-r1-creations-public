@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no">
+<title>Shopping List</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none;
+}
+
+#header {
+  padding: 8px 12px 6px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(254,80,0,0.25);
+  flex-shrink: 0;
+}
+#brand { font-size: 10px; font-weight: 700; color: #FE5000; letter-spacing: 2px; text-transform: uppercase; }
+#item-count { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+#status {
+  padding: 0 12px; font-size: 10px; color: rgba(255,255,255,0.35);
+  text-align: center; flex-shrink: 0; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+#status.listening { color: #FE5000; animation: pulse 0.8s ease infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+#list-container { flex: 1; overflow: hidden; position: relative; }
+#list { position: absolute; top: 0; left: 0; right: 0; transition: transform 0.12s ease; }
+
+.item { display: flex; align-items: center; padding: 0 12px 0 10px; height: 32px; gap: 10px; }
+.item.checked { opacity: 0.4; }
+
+.checkbox {
+  width: 18px; height: 18px; border: 2px solid #FE5000; border-radius: 3px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.12s; position: relative;
+}
+.item.checked .checkbox { background: #FE5000; }
+.checkbox::after {
+  content: ''; display: none; width: 10px; height: 6px;
+  border-left: 2px solid #0e0e10; border-bottom: 2px solid #0e0e10;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.item.checked .checkbox::after { display: block; }
+.item-text { font-size: 13px; color: #fff; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item.checked .item-text { text-decoration: line-through; color: rgba(255,255,255,0.4); }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 220px; gap: 10px; }
+.empty-text { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.6; }
+
+#scrollbar { position: absolute; right: 3px; top: 4px; bottom: 4px; width: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; display: none; }
+#scroll-thumb { position: absolute; left: 0; width: 3px; background: #FE5000; border-radius: 2px; opacity: 0.7; }
+
+/* Edit screen */
+#edit-screen {
+  display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: #0e0e10; flex-direction: column; padding: 14px; z-index: 150;
+}
+#edit-screen.visible { display: flex; }
+#edit-header {
+  font-size: 11px; font-weight: 700; color: #FE5000;
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; padding: 2px 0;
+}
+#edit-input {
+  flex: 1; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+  color: #fff; font-size: 13px; font-family: inherit;
+  padding: 8px; resize: none; outline: none; line-height: 1.5;
+}
+#edit-input:focus { border-color: #FE5000; }
+#edit-actions { display: flex; gap: 8px; margin-top: 10px; }
+#edit-actions button {
+  flex: 1; min-height: 36px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#edit-actions button:active { opacity: 0.7; }
+#edit-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+#edit-save { background: #FE5000; color: #0e0e10; }
+
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="brand">Shopping List</div>
+  <div id="item-count"></div>
+</div>
+<div id="status">Hold side button to add item</div>
+<div id="list-container">
+  <div id="list"></div>
+  <div id="scrollbar"><div id="scroll-thumb"></div></div>
+</div>
+
+<div id="edit-screen">
+  <div id="edit-header">Edit Item</div>
+  <textarea id="edit-input"></textarea>
+  <div id="edit-actions">
+    <button id="edit-cancel">Cancel</button>
+    <button id="edit-save">Save</button>
+  </div>
+</div>
+
+<script>
+var REMOVE_AFTER_MS = 3 * 60 * 60 * 1000;
+var ITEM_HEIGHT = 32;
+var VISIBLE_ITEMS = 7;
+
+var items = [];
+var scrollOffset = 0;
+var isListening = false;
+var editingId = null;
+
+// ── Storage ──────────────────────────────────────────────────────────────
+function saveItems() {
+  try { localStorage.setItem('r1_shopping', JSON.stringify(items)); } catch(e) {}
+}
+function loadItems() {
+  try { var r = localStorage.getItem('r1_shopping'); if (r) items = JSON.parse(r); } catch(e) { items = []; }
+}
+function purgeExpired() {
+  var now = Date.now(), before = items.length;
+  items = items.filter(function(i) { return !i.checked || (now - i.checkedAt) < REMOVE_AFTER_MS; });
+  return items.length !== before;
+}
+
+// ── Transcript normalisation ─────────────────────────────────────────────
+var ORDINALS = [
+  ['thirty first','31st'],['twenty ninth','29th'],['twenty eighth','28th'],
+  ['twenty seventh','27th'],['twenty sixth','26th'],['twenty fifth','25th'],
+  ['twenty fourth','24th'],['twenty third','23rd'],['twenty second','22nd'],
+  ['twenty first','21st'],['twentieth','20th'],['nineteenth','19th'],
+  ['eighteenth','18th'],['seventeenth','17th'],['sixteenth','16th'],
+  ['fifteenth','15th'],['fourteenth','14th'],['thirteenth','13th'],
+  ['twelfth','12th'],['eleventh','11th'],['tenth','10th'],['ninth','9th'],
+  ['eighth','8th'],['seventh','7th'],['sixth','6th'],['fifth','5th'],
+  ['fourth','4th'],['third','3rd'],['second','2nd'],['first','1st'],
+  ['thirtieth','30th']
+];
+var MONTH_RE = 'january|february|march|april|may|june|july|august|september|october|november|december';
+
+function normalizeTranscript(text) {
+  ORDINALS.forEach(function(pair) {
+    text = text.replace(new RegExp('\\b' + pair[0] + '\\b', 'gi'), pair[1]);
+  });
+  text = text.replace(
+    new RegExp('(\\d+(?:st|nd|rd|th))\\s+of\\s+(' + MONTH_RE + ')', 'gi'), '$1 $2'
+  );
+  return text;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function render() {
+  var list = document.getElementById('list');
+  var countEl = document.getElementById('item-count');
+  var scrollbar = document.getElementById('scrollbar');
+
+  var unchecked = items.filter(function(i) { return !i.checked; }).length;
+  countEl.textContent = unchecked > 0 ? unchecked + ' left' : (items.length > 0 ? 'all done' : '');
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state">'
+      + '<svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="opacity:0.15">'
+      + '<path d="M2 3h4l4 18h18l3-12H9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<circle cx="14" cy="27" r="2" fill="white"/><circle cx="24" cy="27" r="2" fill="white"/></svg>'
+      + '<div class="empty-text">Your list is empty<br>Hold side button to add</div></div>';
+    scrollbar.style.display = 'none';
+    return;
+  }
+
+  var maxScroll = Math.max(0, items.length - VISIBLE_ITEMS);
+  scrollOffset = Math.min(Math.max(0, scrollOffset), maxScroll);
+
+  if (items.length > VISIBLE_ITEMS) {
+    scrollbar.style.display = 'block';
+    var barH = ITEM_HEIGHT * VISIBLE_ITEMS;
+    scrollbar.style.height = barH + 'px';
+    var thumbH = Math.max(20, Math.round((VISIBLE_ITEMS / items.length) * barH));
+    var thumbTop = Math.round((scrollOffset / Math.max(1, items.length - 1)) * (barH - thumbH));
+    var thumb = document.getElementById('scroll-thumb');
+    thumb.style.height = thumbH + 'px';
+    thumb.style.top = thumbTop + 'px';
+  } else {
+    scrollbar.style.display = 'none';
+  }
+
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var div = document.createElement('div');
+    div.className = 'item' + (item.checked ? ' checked' : '');
+    div.dataset.id = item.id;
+    var cb = document.createElement('div');
+    cb.className = 'checkbox'; cb.dataset.id = item.id;
+    var txt = document.createElement('div');
+    txt.className = 'item-text'; txt.textContent = item.text;
+    div.appendChild(cb); div.appendChild(txt);
+    frag.appendChild(div);
+  }
+  list.innerHTML = '';
+  list.appendChild(frag);
+  list.style.transform = 'translateY(-' + (scrollOffset * ITEM_HEIGHT) + 'px)';
+
+  list.querySelectorAll('.checkbox').forEach(function(cb) {
+    cb.addEventListener('click', function(e) { e.stopPropagation(); toggleItem(cb.dataset.id); });
+    cb.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); toggleItem(cb.dataset.id); });
+  });
+
+  list.querySelectorAll('.item').forEach(function(row) {
+    var pressTimer = null;
+    var longFired = false;
+    var lastTap = 0;
+    var singleTimer = null;
+
+    row.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.checkbox')) return;
+      longFired = false;
+      pressTimer = setTimeout(function() {
+        longFired = true;
+        deleteItem(row.dataset.id);
+      }, 600);
+    });
+
+    row.addEventListener('pointerup', function(e) {
+      if (e.target.closest('.checkbox')) return;
+      clearTimeout(pressTimer);
+      if (longFired) return;
+      var now = Date.now();
+      if (now - lastTap < 320) {
+        clearTimeout(singleTimer);
+        lastTap = 0;
+        editItem(row.dataset.id);
+        return;
+      }
+      lastTap = now;
+      singleTimer = setTimeout(function() { lastTap = 0; }, 320);
+    });
+
+    row.addEventListener('pointerleave', function() { clearTimeout(pressTimer); });
+    row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
+  });
+}
+
+function toggleItem(id) {
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === id) {
+      items[i].checked = !items[i].checked;
+      items[i].checkedAt = items[i].checked ? Date.now() : null;
+      break;
+    }
+  }
+  saveItems(); render();
+}
+
+function deleteItem(id) {
+  items = items.filter(function(i) { return i.id !== id; });
+  saveItems(); render();
+  setStatus('Deleted', false);
+  resetStatus();
+}
+
+// ── Edit item (keyboard) ─────────────────────────────────────────────────
+var $editScreen = document.getElementById('edit-screen');
+var $editInput = document.getElementById('edit-input');
+
+function editItem(id) {
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === id) {
+      editingId = id;
+      $editInput.value = items[i].text;
+      $editScreen.classList.add('visible');
+      $editInput.focus();
+      return;
+    }
+  }
+}
+
+function closeEdit() {
+  editingId = null;
+  $editScreen.classList.remove('visible');
+  $editInput.blur();
+}
+
+document.getElementById('edit-save').addEventListener('click', function() {
+  if (!editingId) return;
+  var text = $editInput.value.trim();
+  if (!text) { closeEdit(); return; }
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === editingId) { items[i].text = text; break; }
+  }
+  saveItems();
+  closeEdit();
+  render();
+});
+
+document.getElementById('edit-cancel').addEventListener('click', closeEdit);
+
+// ── Status ───────────────────────────────────────────────────────────────
+var statusTimer = null;
+function setStatus(msg, listen) {
+  if (statusTimer) clearTimeout(statusTimer);
+  var el = document.getElementById('status');
+  el.textContent = msg; el.className = listen ? 'listening' : '';
+}
+function resetStatus() {
+  statusTimer = setTimeout(function() { setStatus('Hold side button to add item', false); }, 2500);
+}
+
+// ── Add Item ─────────────────────────────────────────────────────────────
+function addItem(text) {
+  text = normalizeTranscript((text || '').trim()).replace(/[.!?,]+$/, '');
+  if (!text) { setStatus('Nothing heard \u2014 try again', false); resetStatus(); return; }
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  items.unshift({ id: Date.now().toString(), text: text, checked: false, checkedAt: null });
+  scrollOffset = 0;
+  saveItems(); render();
+  setStatus('\u2713 ' + text, false);
+  resetStatus();
+}
+
+// ── Voice via CreationVoiceHandler ───────────────────────────────────────
+window.onPluginMessage = function(data) {
+  if (data.type !== 'sttEnded') return;
+  isListening = false;
+  var text = (data.transcript || '').trim();
+  if (text) addItem(text);
+  else { setStatus('Nothing heard \u2014 try again', false); resetStatus(); }
+};
+
+// ── R1 Events ────────────────────────────────────────────────────────────
+window.addEventListener('longPressStart', function() {
+  if (isListening || $editScreen.classList.contains('visible')) return;
+  isListening = true;
+  setStatus('Listening\u2026 release to add', true);
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('start');
+});
+window.addEventListener('longPressEnd', function() {
+  if (!isListening) return;
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('stop');
+});
+window.addEventListener('scrollUp', function() {
+  if (scrollOffset > 0) { scrollOffset--; render(); }
+});
+window.addEventListener('scrollDown', function() {
+  if (scrollOffset < Math.max(0, items.length - VISIBLE_ITEMS)) { scrollOffset++; render(); }
+});
+
+// ── Keyboard fallbacks ───────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === ' ' && !e.repeat) window.dispatchEvent(new Event('longPressStart'));
+  if (e.key === 'ArrowUp') window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+});
+document.addEventListener('keyup', function(e) {
+  if (e.key === ' ') window.dispatchEvent(new Event('longPressEnd'));
+});
+
+// ── Auto-purge ───────────────────────────────────────────────────────────
+setInterval(function() { if (purgeExpired()) { saveItems(); render(); } }, 5 * 60 * 1000);
+
+// ── Init ─────────────────────────────────────────────────────────────────
+loadItems();
+purgeExpired();
+saveItems();
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,height=282,user-scalable=no">
+<title>Rep Tracker</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  -webkit-user-select: none; user-select: none;
+  position: relative;
+}
+.view {
+  position: absolute; top: 0; left: 0;
+  width: 240px; height: 282px;
+  display: none; flex-direction: column; align-items: center;
+}
+.view.active { display: flex; }
+
+/* Brand */
+.brand {
+  margin-top: 10px; font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.28); letter-spacing: 2px;
+}
+
+/* ── HOME ── */
+.date-row {
+  font-size: 11px; color: rgba(255,255,255,0.38);
+  margin-top: 5px; margin-bottom: 9px;
+}
+.ex-card {
+  width: 218px; height: 86px;
+  background: rgba(254,80,0,0.07);
+  border: 1px solid rgba(254,80,0,0.45);
+  border-radius: 11px; padding: 11px 13px;
+  margin-bottom: 8px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(254,80,0,0.08) inset;
+}
+.ex-card.done {
+  background: rgba(254,80,0,0.12);
+  border-color: rgba(254,80,0,0.75);
+}
+.card-top { display: flex; justify-content: space-between; align-items: baseline; }
+.card-name { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.9); text-transform: uppercase; }
+.card-num { font-size: 22px; font-weight: 700; line-height: 1; }
+.card-num sub { font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.4); vertical-align: baseline; }
+.prog-track { width: 100%; height: 5px; background: rgba(254,80,0,0.18); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: #FE5000; border-radius: 3px; transition: width 0.35s ease; }
+.card-bot { font-size: 9px; color: rgba(254,160,80,0.6); letter-spacing: 0.3px; }
+.nav-hint { font-size: 9px; color: rgba(254,80,0,0.5); letter-spacing: 1px; margin-top: 3px; }
+
+/* ── ADD REPS ── */
+#add-view { justify-content: flex-start; }
+.add-ex-name { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.38); text-transform: uppercase; margin-top: 20px; }
+.add-today { font-size: 10px; color: rgba(255,255,255,0.26); margin-top: 5px; margin-bottom: 22px; }
+.add-big { font-size: 80px; font-weight: 700; color: #FE5000; line-height: 1; text-align: center; }
+.add-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px; margin-bottom: 26px; }
+.add-hint { font-size: 9px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.8; letter-spacing: 0.4px; }
+
+/* ── GRAPH ── */
+#graph-view { justify-content: flex-start; align-items: center; }
+.graph-head {
+  width: 222px; display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px; margin-bottom: 5px;
+}
+.graph-title { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); }
+.graph-period { font-size: 10px; font-weight: 700; color: #FE5000; letter-spacing: 0.5px; }
+#gc { display: block; }
+.graph-legend { display: flex; gap: 14px; margin-top: 6px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 9px; color: rgba(255,255,255,0.36); }
+.leg-swatch { width: 14px; height: 3px; border-radius: 2px; }
+.graph-hint { font-size: 9px; color: rgba(255,255,255,0.18); margin-top: 6px; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="view active" id="home-view">
+  <div class="brand">REP TRACKER</div>
+  <div class="date-row" id="home-date"></div>
+
+  <div class="ex-card" id="card-pu">
+    <div class="card-top">
+      <div class="card-name">Push-ups</div>
+      <div class="card-num" id="pu-num">0<sub> / 100</sub></div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="pu-bar" style="width:0%"></div></div>
+    <div class="card-bot" id="pu-bot">tap to log reps</div>
+  </div>
+
+  <div class="ex-card" id="card-ro">
+    <div class="card-top">
+      <div class="card-name">Inverted Rows</div>
+      <div class="card-num" id="ro-num">0<sub> / 50</sub></div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="ro-bar" style="width:0%"></div></div>
+    <div class="card-bot" id="ro-bot">tap to log reps</div>
+  </div>
+
+  <div class="nav-hint">SIDE BUTTON = GRAPH</div>
+</div>
+
+<!-- ADD REPS -->
+<div class="view" id="add-view">
+  <div class="brand">ADD REPS</div>
+  <div class="add-ex-name" id="add-name"></div>
+  <div class="add-today" id="add-today"></div>
+  <div class="add-big" id="add-big">10</div>
+  <div class="add-sub">reps to add</div>
+  <div class="add-hint">↑ / ↓ scroll to adjust<br>tap to confirm &nbsp;·&nbsp; side to cancel</div>
+</div>
+
+<!-- GRAPH -->
+<div class="view" id="graph-view">
+  <div class="brand">REP TRACKER</div>
+  <div class="graph-head">
+    <div class="graph-title">PROGRESS</div>
+    <div class="graph-period" id="gperiod">WEEKLY</div>
+  </div>
+  <canvas id="gc" width="230" height="178"></canvas>
+  <div class="graph-legend">
+    <div class="leg"><div class="leg-swatch" style="background:#FE5000"></div>Push-ups</div>
+    <div class="leg"><div class="leg-swatch" style="background:rgba(254,80,0,0.45)"></div>Rows</div>
+    <div class="leg"><div class="leg-swatch" style="background:rgba(255,255,255,0.28); border:none; background-image: repeating-linear-gradient(90deg,rgba(255,255,255,0.35) 0 4px,transparent 4px 7px)"></div>Target</div>
+  </div>
+  <div class="graph-hint">SIDE = NEXT PERIOD · LONG PRESS = BACK</div>
+</div>
+
+<script>
+/* ─── Storage ─── */
+var SK = 'reptracker_v1';
+function load() {
+  try { var r = localStorage.getItem(SK); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+}
+function save(data) {
+  try { localStorage.setItem(SK, JSON.stringify(data)); } catch(e) {}
+  try { CreationStorageHandler.postMessage(JSON.stringify({action:'set', key:SK, value:JSON.stringify(data)})); } catch(e) {}
+}
+function todayKey() {
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function getTodayRecord() {
+  var all = load(), k = todayKey();
+  if (!all[k]) all[k] = {pu:0, ro:0};
+  return {all, k, rec: all[k]};
+}
+
+/* ─── State ─── */
+var TARGETS = {pu:100, ro:50};
+var PERIODS = ['WEEKLY','MONTHLY','QUARTERLY','ALL TIME'];
+var pidx = 0;
+var view = 'home';
+var addEx = null;
+var pending = 10;
+
+/* ─── Home UI ─── */
+var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function refreshHome() {
+  var d = new Date();
+  document.getElementById('home-date').textContent =
+    DAYS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+  var {rec} = getTodayRecord();
+  var pu = rec.pu||0, ro = rec.ro||0;
+  document.getElementById('pu-num').innerHTML = pu+'<sub> / 100</sub>';
+  document.getElementById('ro-num').innerHTML = ro+'<sub> / 50</sub>';
+  document.getElementById('pu-bar').style.width = Math.min(100,(pu/100)*100)+'%';
+  document.getElementById('ro-bar').style.width = Math.min(100,(ro/50)*100)+'%';
+  var puDone = pu >= 100, roDone = ro >= 50;
+  document.getElementById('card-pu').classList.toggle('done', puDone);
+  document.getElementById('card-ro').classList.toggle('done', roDone);
+  document.getElementById('pu-bot').textContent = puDone ? '✓ daily goal hit!' : 'tap to log reps · '+Math.max(0,100-pu)+' to go';
+  document.getElementById('ro-bot').textContent = roDone ? '✓ daily goal hit!' : 'tap to log reps · '+Math.max(0,50-ro)+' to go';
+}
+
+/* ─── View switching ─── */
+function showView(name) {
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  document.getElementById(name+'-view').classList.add('active');
+  view = name;
+  if (name === 'home') refreshHome();
+  if (name === 'graph') drawGraph();
+}
+
+/* ─── Add Reps ─── */
+var NAMES = {pu:'Push-ups', ro:'Inverted Rows'};
+var DEFAULTS = {pu:20, ro:10};
+function startAdd(ex) {
+  addEx = ex; pending = DEFAULTS[ex];
+  var {rec} = getTodayRecord();
+  document.getElementById('add-name').textContent = NAMES[ex];
+  document.getElementById('add-today').textContent = 'today: '+(rec[ex]||0)+' / '+TARGETS[ex];
+  document.getElementById('add-big').textContent = pending;
+  showView('add');
+}
+function setPending(delta) {
+  pending = Math.max(1, Math.min(500, pending+delta));
+  document.getElementById('add-big').textContent = pending;
+}
+function confirmAdd() {
+  if (!addEx || pending < 1) { showView('home'); return; }
+  var {all, k, rec} = getTodayRecord();
+  rec[addEx] = (rec[addEx]||0) + pending;
+  all[k] = rec;
+  save(all);
+  showView('home');
+}
+
+/* ─── Graph ─── */
+function getDateRange() {
+  var all = load(), now = new Date();
+  var period = PERIODS[pidx];
+  var days;
+  if (period === 'ALL TIME') {
+    var keys = Object.keys(all).sort();
+    if (!keys.length) { days = 7; }
+    else {
+      var earliest = new Date(keys[0]+'T00:00:00');
+      days = Math.max(2, Math.ceil((now - earliest)/(864e5))+1);
+    }
+  } else {
+    days = period==='WEEKLY'?7 : period==='MONTHLY'?30 : 90;
+  }
+  var dates = [];
+  for (var i=days-1; i>=0; i--) {
+    var d = new Date(now); d.setDate(d.getDate()-i);
+    dates.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+  }
+  return dates;
+}
+
+function drawGraph() {
+  document.getElementById('gperiod').textContent = PERIODS[pidx];
+  var cvs = document.getElementById('gc');
+  var ctx = cvs.getContext('2d');
+  var W=230, H=178;
+  ctx.clearRect(0,0,W,H);
+
+  var dates = getDateRange();
+  var all = load();
+  var n = dates.length;
+  var puVals = dates.map(function(d){ return all[d]?(all[d].pu||0):null; });
+  var roVals = dates.map(function(d){ return all[d]?(all[d].ro||0):null; });
+
+  var pL=30, pR=8, pT=8, pB=22;
+  var gW=W-pL-pR, gH=H-pT-pB;
+  var maxV=110; // a little above 100 target
+
+  /* grid + y-axis */
+  ctx.font='7px -apple-system,sans-serif';
+  [0,25,50,75,100].forEach(function(v){
+    var gy = pT + gH - (v/maxV)*gH;
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(pL,gy); ctx.lineTo(W-pR,gy); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.22)';
+    ctx.textAlign='right';
+    ctx.fillText(v, pL-3, gy+3);
+  });
+
+  /* x-axis labels */
+  ctx.fillStyle='rgba(255,255,255,0.22)';
+  ctx.textAlign='center';
+  var step = n<=7?1 : n<=30?5 : n<=90?14 : 30;
+  for (var i=0;i<n;i+=step) {
+    var lx = pL + (n>1?(i/(n-1)):0.5)*gW;
+    var parts=dates[i].split('-');
+    ctx.fillText(parts[1]+'/'+parts[2], lx, H-pB+10);
+  }
+
+  function xp(i){ return pL+(n>1?(i/(n-1)):0.5)*gW; }
+  function yp(v){ return pT+gH-(v/maxV)*gH; }
+
+  /* target dashed lines */
+  ctx.setLineDash([3,4]);
+  ctx.lineWidth=1;
+  [100,50].forEach(function(t){
+    ctx.strokeStyle='rgba(220,220,220,0.3)';
+    var ty=yp(t);
+    ctx.beginPath(); ctx.moveTo(pL,ty); ctx.lineTo(W-pR,ty); ctx.stroke();
+    /* tiny label on right */
+    ctx.fillStyle='rgba(255,255,255,0.28)';
+    ctx.textAlign='left'; ctx.font='7px -apple-system,sans-serif';
+    ctx.fillText(t, W-pR+1, ty+3);
+  });
+  ctx.setLineDash([]);
+
+  var useBars = n<=14;
+
+  if (useBars) {
+    /* grouped bars */
+    var slot = gW/n;
+    var bw = Math.max(2.5, slot*0.32);
+    var off = bw*0.7;
+    for (var i=0;i<n;i++) {
+      var bx = pL + (i+0.5)*slot;
+      if (puVals[i]!==null && puVals[i]>0) {
+        var bh=(puVals[i]/maxV)*gH;
+        var grad=ctx.createLinearGradient(0,yp(puVals[i]),0,pT+gH);
+        grad.addColorStop(0,'rgba(254,80,0,0.95)');
+        grad.addColorStop(1,'rgba(254,80,0,0.4)');
+        ctx.fillStyle=grad;
+        roundRect(ctx, bx-off-bw/2, pT+gH-bh, bw, bh, 2);
+        ctx.fill();
+      }
+      if (roVals[i]!==null && roVals[i]>0) {
+        var bh2=(roVals[i]/maxV)*gH;
+        var grad2=ctx.createLinearGradient(0,yp(roVals[i]),0,pT+gH);
+        grad2.addColorStop(0,'rgba(254,80,0,0.52)');
+        grad2.addColorStop(1,'rgba(254,80,0,0.18)');
+        ctx.fillStyle=grad2;
+        roundRect(ctx, bx+off-bw/2, pT+gH-bh2, bw, bh2, 2);
+        ctx.fill();
+      }
+    }
+  } else {
+    /* area lines */
+    function drawArea(vals, strokeColor, fillColor) {
+      /* collect segments (non-null runs) */
+      var segs=[], seg=null;
+      for (var i=0;i<n;i++) {
+        if (vals[i]!==null) {
+          if (!seg) seg={start:i, pts:[]};
+          seg.pts.push({x:xp(i),y:yp(vals[i])});
+        } else if (seg) { segs.push(seg); seg=null; }
+      }
+      if (seg) segs.push(seg);
+      segs.forEach(function(s){
+        if (s.pts.length<1) return;
+        /* fill area */
+        ctx.beginPath();
+        ctx.moveTo(s.pts[0].x, pT+gH);
+        s.pts.forEach(function(p){ ctx.lineTo(p.x,p.y); });
+        ctx.lineTo(s.pts[s.pts.length-1].x, pT+gH);
+        ctx.closePath();
+        ctx.fillStyle=fillColor;
+        ctx.fill();
+        /* line */
+        ctx.beginPath();
+        s.pts.forEach(function(p,j){ j===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+        ctx.strokeStyle=strokeColor; ctx.lineWidth=1.5;
+        ctx.stroke();
+        /* dots on data points if not too many */
+        if (n<=30) {
+          s.pts.forEach(function(p){
+            ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2);
+            ctx.fillStyle=strokeColor; ctx.fill();
+          });
+        }
+      });
+    }
+    drawArea(roVals, 'rgba(254,80,0,0.6)', 'rgba(254,80,0,0.10)');
+    drawArea(puVals, 'rgba(254,80,0,0.95)', 'rgba(254,80,0,0.18)');
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r) {
+  if (h<1) return;
+  r = Math.min(r,h/2,w/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+/* ─── Events ─── */
+window.addEventListener('sideClick', function() {
+  if (view==='home') showView('graph');
+  else if (view==='graph') { pidx=(pidx+1)%PERIODS.length; drawGraph(); }
+  else if (view==='add') showView('home');
+});
+window.addEventListener('longPressStart', function() {
+  if (view==='graph') showView('home');
+});
+window.addEventListener('scrollUp', function() {
+  if (view==='add') setPending(-1);
+});
+window.addEventListener('scrollDown', function() {
+  if (view==='add') setPending(1);
+});
+
+/* keyboard fallbacks */
+document.addEventListener('keydown', function(e) {
+  if (e.key==='Escape') window.dispatchEvent(new Event('sideClick'));
+  if (e.key==='ArrowUp') window.dispatchEvent(new Event('scrollUp'));
+  if (e.key==='ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+  if (e.key==='l') window.dispatchEvent(new Event('longPressStart'));
+});
+
+/* touch / click */
+var txStart=0, tyStart=0, tmoved=false;
+document.body.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  txStart=e.touches[0].clientX; tyStart=e.touches[0].clientY; tmoved=false;
+}, {passive:false});
+document.body.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  if (Math.abs(e.touches[0].clientY-tyStart)>12) tmoved=true;
+}, {passive:false});
+document.body.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  if (!tmoved) handleTap(txStart, tyStart);
+}, {passive:false});
+document.body.addEventListener('click', function(e) {
+  handleTap(e.clientX, e.clientY);
+});
+
+function handleTap(x,y) {
+  if (view==='home') {
+    var r1=document.getElementById('card-pu').getBoundingClientRect();
+    var r2=document.getElementById('card-ro').getBoundingClientRect();
+    if (x>=r1.left&&x<=r1.right&&y>=r1.top&&y<=r1.bottom) startAdd('pu');
+    else if (x>=r2.left&&x<=r2.right&&y>=r2.top&&y<=r2.bottom) startAdd('ro');
+  } else if (view==='add') {
+    confirmAdd();
+  }
+}
+
+/* ─── Init ─── */
+refreshHome();
+</script>
+</body>
+</html>

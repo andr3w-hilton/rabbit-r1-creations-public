@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,height=282,user-scalable=no">
+<title>Spirit Level</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10;
+  -webkit-user-select: none; user-select: none;
+  position: relative;
+}
+canvas { display: block; }
+#overlay {
+  position: absolute; inset: 0;
+  background: rgba(14,14,16,0.92);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; cursor: pointer;
+}
+#overlay.hidden { display: none; }
+#overlay .tap-btn {
+  font-family: -apple-system, sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: #FE5000;
+  border: 1.5px solid #FE5000;
+  padding: 8px 20px; border-radius: 20px;
+  letter-spacing: 1px;
+}
+#overlay .hint {
+  font-family: -apple-system, sans-serif;
+  font-size: 10px; color: rgba(255,255,255,0.35);
+  text-align: center; padding: 0 30px; line-height: 1.5;
+}
+#hz-pill {
+  position: absolute; bottom: 7px; right: 10px;
+  font-family: -apple-system, sans-serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.2);
+}
+#cal-btn {
+  position: absolute; bottom: 7px; left: 10px;
+  background: transparent;
+  border: 1px solid rgba(254,80,0,0.4);
+  color: rgba(254,80,0,0.65);
+  font-family: -apple-system, sans-serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 1.5px;
+  padding: 3px 8px; border-radius: 10px;
+  cursor: pointer; outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+}
+#cal-btn:active, #cal-btn.active {
+  background: rgba(254,80,0,0.18);
+  border-color: rgba(254,80,0,0.8);
+  color: #FE5000;
+}
+</style>
+</head>
+<body>
+<canvas id="c" width="240" height="282"></canvas>
+<button id="cal-btn">CAL</button>
+<div id="hz-pill"></div>
+<div id="overlay">
+  <div class="tap-btn">TAP TO ENABLE</div>
+  <div class="hint">Tilt sensor requires permission</div>
+</div>
+<script>
+const canvas  = document.getElementById('c');
+const ctx     = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const calBtn  = document.getElementById('cal-btn');
+
+// Layout constants
+const CX = 120, CY = 148;
+const R       = 97;
+const INNER_R = 40;
+const BMAX    = 36;
+const ORANGE  = '#FE5000';
+
+let sensorX = 0, sensorY = 0;   // raw from device
+let offX    = 0, offY    = 0;   // calibration offsets
+let smX     = 0, smY     = 0;   // smoothed display values
+
+// Flash state: 1 = just calibrated (green-ish), -1 = reset, 0 = none
+let flashMsg   = '';
+let flashAlpha = 0;
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ─── Calibration ────────────────────────────────────────────────────
+function calibrate() {
+  offX = sensorX;
+  offY = sensorY;
+  smX  = 0; smY = 0;          // snap bubble to centre immediately
+  flashMsg   = 'CALIBRATED';
+  flashAlpha = 1;
+  calBtn.classList.add('active');
+  setTimeout(() => calBtn.classList.remove('active'), 300);
+}
+
+function resetCal() {
+  offX = 0; offY = 0;
+  smX  = 0; smY = 0;
+  flashMsg   = 'RESET';
+  flashAlpha = 1;
+}
+
+// ─── Sensor init ────────────────────────────────────────────────────
+// Prefer the native R1 accelerometer bridge (window.creationSensors).
+// Falls back to DeviceOrientationEvent for browser/desktop testing.
+
+const hzPill = document.getElementById('hz-pill');
+let usingNativeSensor = false;
+
+function toDegs(normalized) {
+  // normalized is -1..1 from creationSensors; asin converts to degrees
+  return Math.asin(clamp(normalized, -1, 1)) * 180 / Math.PI;
+}
+
+function onSensorData(data) {
+  sensorX = clamp(toDegs(data.x), -50, 50);
+  sensorY = clamp(toDegs(data.y), -50, 50);
+}
+
+async function initSensors() {
+  if (typeof window.creationSensors !== 'undefined') {
+    try {
+      const available = await window.creationSensors.accelerometer.isAvailable();
+      if (available) {
+        window.creationSensors.accelerometer.start(onSensorData, { frequency: 60 });
+        usingNativeSensor = true;
+        overlay.classList.add('hidden');
+        hzPill.textContent = '60HZ';
+        return;
+      }
+    } catch (e) { /* fall through */ }
+  }
+
+  // DeviceOrientationEvent fallback (browser / desktop)
+  function handleOrientation(e) {
+    if (e.gamma === null) return;
+    sensorX = clamp(e.gamma, -50, 50);
+    let b = e.beta == null ? 0 : e.beta;
+    if (b >  90) b =  180 - b;
+    if (b < -90) b = -180 - b;
+    sensorY = clamp(b - 90, -50, 50);
+  }
+
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    window.addEventListener('deviceorientation', handleOrientation);
+    overlay.classList.add('hidden');
+  }
+
+  overlay.addEventListener('click', function() {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(s => {
+        if (s === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+      });
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+    overlay.classList.add('hidden');
+  });
+}
+
+initSensors();
+
+// ─── Visibility — stop accelerometer when backgrounded ───────────────
+document.addEventListener('visibilitychange', function() {
+  if (!usingNativeSensor) return;
+  if (document.hidden) {
+    window.creationSensors.accelerometer.stop();
+  } else {
+    window.creationSensors.accelerometer.start(onSensorData, { frequency: 60 });
+  }
+});
+
+// ─── CAL button ─────────────────────────────────────────────────────
+let calPressTimer = null;
+
+calBtn.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  calPressTimer = setTimeout(() => { resetCal(); calPressTimer = null; }, 600);
+}, { passive: false });
+
+calBtn.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  if (calPressTimer !== null) {
+    clearTimeout(calPressTimer);
+    calPressTimer = null;
+    calibrate();
+  }
+});
+
+calBtn.addEventListener('click', calibrate);      // desktop fallback
+
+// ─── R1 native events ────────────────────────────────────────────────
+window.addEventListener('sideClick',     calibrate);
+window.addEventListener('longPressStart', resetCal);
+
+// ─── Desktop simulation ──────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  const s = 3;
+  if (e.key === 'ArrowLeft')  { sensorX = clamp(sensorX - s, -50, 50); overlay.classList.add('hidden'); }
+  if (e.key === 'ArrowRight') { sensorX = clamp(sensorX + s, -50, 50); overlay.classList.add('hidden'); }
+  if (e.key === 'ArrowUp')    { sensorY = clamp(sensorY - s, -50, 50); overlay.classList.add('hidden'); }
+  if (e.key === 'ArrowDown')  { sensorY = clamp(sensorY + s, -50, 50); overlay.classList.add('hidden'); }
+  if (e.key === 'c')          calibrate();
+  if (e.key === 'r')          resetCal();
+  if (e.key === 'Escape')     window.dispatchEvent(new Event('sideClick'));
+});
+window.addEventListener('scrollUp',   () => { sensorX = clamp(sensorX - 3, -50, 50); overlay.classList.add('hidden'); });
+window.addEventListener('scrollDown', () => { sensorX = clamp(sensorX + 3, -50, 50); overlay.classList.add('hidden'); });
+
+// ─── Draw ────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, 240, 282);
+  ctx.fillStyle = '#0e0e10';
+  ctx.fillRect(0, 0, 240, 282);
+
+  // Brand
+  ctx.save();
+  ctx.font = '600 8.5px -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('SPIRIT LEVEL', 120, 14);
+  ctx.restore();
+
+  // Calibration indicator dot (top-right, visible when offsets active)
+  if (offX !== 0 || offY !== 0) {
+    ctx.beginPath();
+    ctx.arc(222, 14, 3, 0, Math.PI * 2);
+    ctx.fillStyle = ORANGE;
+    ctx.fill();
+  }
+
+  // ── Outer ring ──
+  ctx.beginPath();
+  ctx.arc(CX, CY, R + 3, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(254,80,0,0.06)';
+  ctx.lineWidth = 5; ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+  ctx.lineWidth = 1; ctx.stroke();
+
+  // ── Degree marks ──
+  for (let deg = 0; deg < 360; deg += 5) {
+    const angle   = (deg - 90) * Math.PI / 180;
+    const isMajor = deg % 30 === 0;
+    const isMed   = deg % 10 === 0;
+    const tLen    = isMajor ? 14 : (isMed ? 8 : 4);
+    const x1 = CX + (R - 0.5) * Math.cos(angle);
+    const y1 = CY + (R - 0.5) * Math.sin(angle);
+    const x2 = CX + (R - tLen) * Math.cos(angle);
+    const y2 = CY + (R - tLen) * Math.sin(angle);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = isMajor
+      ? 'rgba(255,255,255,0.7)'
+      : (isMed ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)');
+    ctx.lineWidth = isMajor ? 1.5 : 0.8;
+    ctx.stroke();
+    if (isMajor) {
+      const lr = R - 26;
+      ctx.save();
+      ctx.translate(CX + lr * Math.cos(angle), CY + lr * Math.sin(angle));
+      ctx.rotate(angle + Math.PI / 2);
+      ctx.font = '7px -apple-system, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.42)';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(deg + '\u00b0', 0, 0);
+      ctx.restore();
+    }
+  }
+
+  // ── Dashed crosshair ──
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+  const cr = R - 17;
+  ctx.beginPath();
+  ctx.moveTo(CX - cr, CY); ctx.lineTo(CX + cr, CY);
+  ctx.moveTo(CX, CY - cr); ctx.lineTo(CX, CY + cr);
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore();
+
+  // ── Inner level-zone ring ──
+  ctx.beginPath();
+  ctx.arc(CX, CY, INNER_R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(254,80,0,0.28)';
+  ctx.lineWidth = 1; ctx.stroke();
+
+  // ── Level line ──
+  const tiltRad = -smX * Math.PI / 180;
+  const llR     = R - 19;
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(tiltRad);
+  ctx.beginPath(); ctx.moveTo(-llR, 0); ctx.lineTo(llR, 0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-llR, 0); ctx.lineTo(llR, 0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.52)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  [-llR, llR].forEach(x => { ctx.beginPath(); ctx.arc(x, 0, 2.5, 0, Math.PI*2); ctx.fill(); });
+  ctx.restore();
+
+  // ── Bubble ──
+  let bx = CX + (smX / 45) * BMAX;
+  let by = CY + (smY / 45) * BMAX;
+  const d = Math.sqrt((bx - CX) ** 2 + (by - CY) ** 2);
+  if (d > BMAX) { bx = CX + (bx - CX) / d * BMAX; by = CY + (by - CY) / d * BMAX; }
+
+  const halo = ctx.createRadialGradient(bx, by, 2, bx, by, 22);
+  halo.addColorStop(0,    'rgba(254,80,0,0.55)');
+  halo.addColorStop(0.55, 'rgba(254,80,0,0.18)');
+  halo.addColorStop(1,    'rgba(254,80,0,0)');
+  ctx.beginPath(); ctx.arc(bx, by, 22, 0, Math.PI * 2);
+  ctx.fillStyle = halo; ctx.fill();
+
+  const bgrad = ctx.createRadialGradient(bx - 3.5, by - 3.5, 1, bx, by, 12);
+  bgrad.addColorStop(0,    '#FF8C50');
+  bgrad.addColorStop(0.45, ORANGE);
+  bgrad.addColorStop(1,    '#BB2E00');
+  ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI * 2);
+  ctx.fillStyle = bgrad; ctx.fill();
+
+  ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,130,70,0.75)'; ctx.lineWidth = 1; ctx.stroke();
+
+  const spec = ctx.createRadialGradient(bx - 4, by - 4, 0, bx - 4, by - 4, 5.5);
+  spec.addColorStop(0, 'rgba(255,255,255,0.45)');
+  spec.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(bx - 4, by - 4, 5.5, 0, Math.PI * 2);
+  ctx.fillStyle = spec; ctx.fill();
+
+  // ── Readout / flash ──
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  if (flashAlpha > 0.01) {
+    // Show flash message centred in readout row
+    ctx.font = 'bold 10px -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(254,80,0,' + flashAlpha.toFixed(2) + ')';
+    ctx.fillText(flashMsg, 120, 271);
+    flashAlpha *= 0.88;   // fade out
+  } else {
+    const dX  = Math.round(smX * 10) / 10;
+    const dY  = Math.round(smY * 10) / 10;
+    const lvl = Math.abs(dX) < 0.7 && Math.abs(dY) < 0.7;
+    if (lvl) {
+      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.fillStyle = ORANGE;
+      ctx.fillText('\u25cf  LEVEL', 120, 271);
+    } else {
+      const fmt = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '\u00b0';
+      ctx.font = '9px -apple-system, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.fillText('\u2194 ' + fmt(dX) + '    \u2195 ' + fmt(dY), 120, 271);
+    }
+  }
+}
+
+// ─── Loop ────────────────────────────────────────────────────────────
+(function loop() {
+  const rawX = sensorX - offX;
+  const rawY = sensorY - offY;
+  const k = 0.13;
+  smX += (rawX - smX) * k;
+  smY += (rawY - smY) * k;
+  draw();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240,initial-scale=1.0,user-scalable=no">
+<title>R1 Claude</title>for t
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10;
+  -webkit-user-select: none; user-select: none;
+  font-family: -apple-system, sans-serif;
+  position: relative;
+}
+#top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px;
+  border-bottom: 1px solid rgba(254,80,0,0.18);
+}
+#top-bar .name {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: #FF6720;
+}
+#top-bar .stage-lbl {
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+}
+#main-canvas {
+  position: absolute; top: 24px; left: 0;
+  display: block;
+}
+#bottom-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 50px;
+  padding: 4px 10px 6px;
+  display: flex; flex-direction: column; gap: 3px;
+  border-top: 1px solid rgba(254,80,0,0.12);
+}
+.stat-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.stat-label {
+  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+  width: 10px; text-align: center;
+}
+.bar-track {
+  flex: 1; height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.4s ease;
+}
+#hunger-fill { background: #FF6720; }
+#happy-fill { background: rgba(255,255,255,0.55); }
+#hint {
+  font-size: 8px; color: rgba(255,255,255,0.2);
+  text-align: center; letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+
+/* Stats overlay */
+#stats-panel {
+  position: absolute; top: 0; right: -240px; width: 240px; height: 282px;
+  background: rgba(14,14,16,0.97);
+  display: flex; flex-direction: column;
+  padding: 28px 18px 18px;
+  gap: 0;
+  transition: right 0.25s cubic-bezier(0.22,1,0.36,1);
+  border-left: 1px solid rgba(254,80,0,0.3);
+  z-index: 10;
+}
+#stats-panel.open { right: 0; }
+#stats-panel .sp-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(255,255,255,0.3); margin-bottom: 4px;
+}
+#stats-panel .sp-val {
+  font-size: 14px; font-weight: 700; color: #FF6720;
+  letter-spacing: 1px; margin-bottom: 2px;
+}
+#stats-panel .sp-sub {
+  font-size: 10px; color: rgba(255,255,255,0.45);
+  margin-bottom: 14px;
+}
+#stats-panel .sp-divider {
+  height: 1px; background: rgba(255,255,255,0.1);
+  margin-bottom: 14px;
+}
+#stats-panel .sp-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px 6px; margin-bottom: 14px;
+}
+#stats-panel .sp-stat-item {
+  display: flex; flex-direction: column; gap: 2px;
+}
+#stats-panel .sp-stat-label {
+  font-size: 8px; font-weight: 700; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.35);
+}
+#stats-panel .sp-stat-val {
+  font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
+}
+#stats-panel .sp-controls {
+  display: flex; flex-direction: column; gap: 5px;
+  margin-bottom: 14px;
+}
+#stats-panel .sp-ctrl-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 0.3px;
+}
+#stats-panel .sp-ctrl-key {
+  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.55); min-width: 52px;
+}
+#stats-panel .sp-close {
+  margin-top: auto;
+  font-size: 9px; color: rgba(255,255,255,0.2);
+  text-align: center; letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <span class="name">· CLAUDE ·</span>
+  <span class="stage-lbl" id="stage-lbl">EGG</span>
+</div>
+
+<canvas id="main-canvas" width="240" height="208"></canvas>
+
+<div id="bottom-bar">
+  <div class="stat-row">
+    <span class="stat-label">H</span>
+    <div class="bar-track"><div class="bar-fill" id="hunger-fill"></div></div>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">♥</span>
+    <div class="bar-track"><div class="bar-fill" id="happy-fill"></div></div>
+  </div>
+  <div id="hint">tap feed · click play · click×2 stats</div>
+</div>
+
+<div id="stats-panel">
+  <div class="sp-title">STAGE</div>
+  <div class="sp-val" id="sp-stage-val">EGG</div>
+  <div class="sp-title" style="margin-top:8px">AGE</div>
+  <div class="sp-sub" id="sp-age-val">0m</div>
+  <div class="sp-divider"></div>
+  <div class="sp-stat-grid">
+    <div class="sp-stat-item"><div class="sp-stat-label">HUNGER</div><div class="sp-stat-val" id="sp-hunger-val">—</div></div>
+    <div class="sp-stat-item"><div class="sp-stat-label">JOY</div><div class="sp-stat-val" id="sp-joy-val">—</div></div>
+    <div class="sp-stat-item"><div class="sp-stat-label">MOOD</div><div class="sp-stat-val" id="sp-mood-val">—</div></div>
+    <div class="sp-stat-item"><div class="sp-stat-label">NEXT</div><div class="sp-stat-val" id="sp-next-val">—</div></div>
+  </div>
+  <div class="sp-divider"></div>
+  <div class="sp-controls">
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">TAP</span>feed +25 hunger</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">CLICK</span>play +20 joy, -5 hunger</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">CLICK×2</span>open stats</div>
+  </div>
+  <div class="sp-divider"></div>
+  <div class="sp-close">tap or esc to close</div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+var ORANGE = '#FF6720';
+var DARK   = 'rgba(0,0,0,0.4)';
+var EYE    = '#1a0800';
+var BG     = '#0e0e10';
+var WHITE  = '#ffffff';
+
+var STAGE_NAMES = ['EGG', 'BABY', 'KID', 'ADULT', 'ELDER'];
+// Stage advancement thresholds in milliseconds from born
+var STAGE_THRESHOLDS = [
+  0,
+  10 * 60 * 1000,        // 10 minutes  -> baby
+  4 * 60 * 60 * 1000,    // 4 hours     -> kid
+  24 * 60 * 60 * 1000,   // 24 hours    -> adult
+  72 * 60 * 60 * 1000    // 72 hours    -> elder
+];
+
+// ─── SPRITES ──────────────────────────────────────────────────────────────────
+// 0=transparent, 1=orange, 2=dark divider, 3=eye/dark
+
+// EGG sprite 12×10
+var EGG_SPRITE = [
+  [0,0,0,1,1,1,1,1,1,0,0,0],
+  [0,0,1,1,1,1,1,1,1,1,0,0],
+  [0,1,1,1,1,2,1,1,1,1,1,0],
+  [1,1,1,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1],
+  [0,1,1,1,1,1,1,1,1,1,1,0],
+  [0,0,1,1,1,1,1,1,1,1,0,0],
+  [0,0,0,1,1,1,1,1,1,0,0,0]
+];
+
+// ELDER sprite — KID base + single-pixel white cane (21×13)
+// Col 18: orange arm pixels on arm rows (4-7), transparent elsewhere
+// Col 19: white cane — single column shaft rows 8-12
+// Col 20: one orange thumb pixel (row 6) wrapping around cane
+// Eyes: vertical slit columns at cols 7 & 12 (rows 3-7), value=3 for blinking
+var ELDER_SPRITE = [
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 0
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 1 — old eyes removed
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 2 — old eyes removed
+  [0,0,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,0,0,0],  // row 3 — slit eyes
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 4
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 5
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,1],  // row 6  — thumb (col 20=orange)
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 7
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,0],  // row 8  — cane shaft
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],  // row 9
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],  // row 10
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0],  // row 11
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0],  // row 12 — cane tip
+];
+
+// KID sprite 20×11 (16 body + 2 arm pixels each side)
+// Arms protrude at rows 4-7 (mid-body)
+// Eyes: vertical slit columns at cols 7 & 12 (rows 3-7), value=3 for blinking
+var KID_SPRITE = [
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+  [0,0,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,0,0],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,1],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0]
+];
+
+var SPRITES = [EGG_SPRITE, KID_SPRITE, KID_SPRITE, KID_SPRITE, ELDER_SPRITE];
+var PIXEL_SIZES = [7, 5, 7, 9, 9];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var state = {
+  born: 0, lastSeen: 0,
+  hunger: 80, happiness: 80,
+  stage: 0
+};
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem('r1_buddy');
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      state.born      = parsed.born      || Date.now();
+      state.lastSeen  = parsed.lastSeen  || Date.now();
+      state.hunger    = typeof parsed.hunger    === 'number' ? parsed.hunger    : 80;
+      state.happiness = typeof parsed.happiness === 'number' ? parsed.happiness : 80;
+      state.stage     = typeof parsed.stage     === 'number' ? parsed.stage     : 0;
+    } else {
+      // First boot
+      state.born      = Date.now();
+      state.lastSeen  = Date.now();
+      state.hunger    = 80;
+      state.happiness = 80;
+      state.stage     = 0;
+      saveState();
+    }
+  } catch (e) {
+    state.born = Date.now();
+    state.lastSeen = Date.now();
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('r1_buddy', JSON.stringify({
+      born:      state.born,
+      lastSeen:  Date.now(),
+      hunger:    Math.round(state.hunger),
+      happiness: Math.round(state.happiness),
+      stage:     state.stage
+    }));
+  } catch (e) {}
+}
+
+function applyTimeDecay() {
+  var now = Date.now();
+  var elapsedMinutes = (now - state.lastSeen) / 60000;
+  if (elapsedMinutes > 0) {
+    state.hunger    = Math.max(0, state.hunger    - elapsedMinutes / 20);
+    state.happiness = Math.max(0, state.happiness - elapsedMinutes / 30);
+  }
+  state.lastSeen = now;
+}
+
+function applyStageAdvancement() {
+  var age = Date.now() - state.born;
+  var newStage = 0;
+  for (var i = STAGE_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (age >= STAGE_THRESHOLDS[i]) { newStage = i; break; }
+  }
+  if (newStage > state.stage) {
+    var wasEgg = state.stage === 0;
+    state.stage = newStage;
+    if (wasEgg) triggerHatch();
+  }
+}
+
+function getMood() {
+  var hour = new Date().getHours();
+  if (hour >= 22 || hour < 7) return 'sleeping';
+  if (anim.type === 'play')   return 'playing';
+  if (state.hunger < 10)      return 'very_hungry';
+  if (state.hunger < 30)      return 'hungry';
+  return 'happy';
+}
+
+// ─── ANIMATION STATE ──────────────────────────────────────────────────────────
+var anim = {
+  type: 'idle',       // idle | feed | play | sleeping | hatch
+  startTime: 0,
+  duration: 0,
+  fromEgg: false      // true when hatch started from egg stage
+};
+
+var blinkState = {
+  blinking: false,
+  nextBlink: 0
+};
+
+var particles = []; // ZZZ particles
+
+function scheduleNextBlink() {
+  blinkState.nextBlink = Date.now() + 4000 + Math.random() * 2000;
+}
+
+function triggerAnim(type, duration) {
+  anim.type = type;
+  anim.startTime = Date.now();
+  anim.duration = duration;
+}
+
+function triggerHatch() {
+  anim.type = 'hatch';
+  anim.startTime = Date.now();
+  anim.duration = 800;
+  anim.fromEgg = true;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function doFeed() {
+  if (state.stage === 0) return; // can't feed egg
+  var mood = getMood();
+  var bonus = (mood === 'sleeping') ? 0.5 : 1;
+  state.hunger = Math.min(100, state.hunger + 25 * bonus);
+  if (mood === 'very_hungry') state.happiness = Math.min(100, state.happiness + 10);
+  triggerAnim('feed', 300);
+  saveState();
+  updateUI();
+}
+
+function doPlay() {
+  if (state.stage === 0) return;
+  var mood = getMood();
+  var bonus = (mood === 'sleeping') ? 0.5 : 1;
+  state.happiness = Math.min(100, state.happiness + 20 * bonus);
+  state.hunger    = Math.max(0, state.hunger - 5);
+  triggerAnim('play', 600);
+  saveState();
+  updateUI();
+}
+
+var statsOpen = false;
+
+function openStats() {
+  var panel = document.getElementById('stats-panel');
+  var stageNames = STAGE_NAMES;
+  var age = Date.now() - state.born;
+  var days  = Math.floor(age / 86400000);
+  var hours = Math.floor((age % 86400000) / 3600000);
+  var mins  = Math.floor((age % 3600000)  / 60000);
+  var ageStr = days + 'd ' + hours + 'h';
+
+  document.getElementById('sp-stage-val').textContent = stageNames[state.stage];
+  document.getElementById('sp-age-val').textContent   = ageStr;
+
+  document.getElementById('sp-hunger-val').textContent = Math.round(state.hunger) + '%';
+  document.getElementById('sp-joy-val').textContent    = Math.round(state.happiness) + '%';
+
+  var moodLabels = { happy: 'HAPPY', hungry: 'HUNGRY', very_hungry: 'STARVING',
+                     sleeping: 'SLEEPING', playing: 'PLAYING' };
+  document.getElementById('sp-mood-val').textContent = moodLabels[getMood()] || 'HAPPY';
+
+  var nextStage = state.stage + 1;
+  if (nextStage >= STAGE_THRESHOLDS.length) {
+    document.getElementById('sp-next-val').textContent = 'ELDER';
+  } else {
+    var remaining = STAGE_THRESHOLDS[nextStage] - age;
+    if (remaining <= 0) {
+      document.getElementById('sp-next-val').textContent = 'SOON';
+    } else {
+      var rh = Math.floor(remaining / 3600000);
+      var rm = Math.floor((remaining % 3600000) / 60000);
+      document.getElementById('sp-next-val').textContent = rh > 0 ? rh + 'h ' + rm + 'm' : rm + 'm';
+    }
+  }
+
+  panel.classList.add('open');
+  statsOpen = true;
+}
+
+function closeStats() {
+  document.getElementById('stats-panel').classList.remove('open');
+  statsOpen = false;
+}
+
+// ─── R1 EVENT HANDLING ────────────────────────────────────────────────────────
+var lastSideClick = 0;
+
+window.addEventListener('sideClick', function() {
+  if (statsOpen) { closeStats(); return; }
+  var now = Date.now();
+  if (now - lastSideClick < 400) {
+    openStats();
+    lastSideClick = 0;
+  } else {
+    lastSideClick = now;
+    setTimeout(function() {
+      if (lastSideClick === now) doPlay();
+    }, 400);
+  }
+});
+
+window.addEventListener('longPressEnd', function() {
+  state.born      = Date.now();
+  state.lastSeen  = Date.now();
+  state.hunger    = 80;
+  state.happiness = 80;
+  state.stage     = 0;
+  anim.type       = 'idle';
+  zzParticles     = [];
+  saveState();
+  updateUI();
+});
+
+window.addEventListener('scrollUp', function() {});
+window.addEventListener('scrollDown', function() {});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
+  if (e.key === 'ArrowUp')   window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+  if (e.key === ' ' && !e.repeat) { e.preventDefault(); doFeed(); }
+  if (e.key === 'Tab') { e.preventDefault(); cycleStagePreview(); }
+  if (e.key === 'r') window.dispatchEvent(new Event('longPressEnd'));
+});
+
+// ── Stage preview cycle (desktop only) ──────
+function cycleStagePreview() {
+  state.stage = (state.stage + 1) % 5;
+  saveState();
+}
+
+
+// Tap canvas to feed
+var canvas = document.getElementById('main-canvas');
+canvas.addEventListener('pointerup', function(e) {
+  e.preventDefault();
+  if (statsOpen) { closeStats(); return; }
+  doFeed();
+});
+
+// Tap stats panel to close
+document.getElementById('stats-panel').addEventListener('pointerup', function(e) {
+  e.preventDefault();
+  closeStats();
+});
+
+// ─── UI UPDATES ───────────────────────────────────────────────────────────────
+function updateUI() {
+  document.getElementById('hunger-fill').style.width  = Math.round(state.hunger) + '%';
+  document.getElementById('happy-fill').style.width   = Math.round(state.happiness) + '%';
+  document.getElementById('stage-lbl').textContent    = STAGE_NAMES[state.stage];
+}
+
+// ─── DRAWING ──────────────────────────────────────────────────────────────────
+var ctx = canvas.getContext('2d');
+
+function getEyeVariant(mood) {
+  // Returns 'normal' | 'sleeping' | 'hungry' | 'playing' | 'dead'
+  if (blinkState.blinking) return 'sleeping';
+  switch (mood) {
+    case 'sleeping':   return 'sleeping';
+    case 'hungry':
+    case 'very_hungry':return 'hungry';
+    case 'playing':    return 'playing';
+    default:           return 'normal';
+  }
+}
+
+function drawSprite(cx, cy, stage, eyeVariant, scale) {
+  scale = scale || 1;
+  var sprite   = SPRITES[stage];
+  var pxSize   = PIXEL_SIZES[stage] * scale;
+  var rows     = sprite.length;
+  var cols     = sprite[0].length;
+  var drawW    = cols * pxSize;
+  var drawH    = rows * pxSize;
+  var startX   = cx - drawW / 2;
+  var startY   = cy - drawH / 2;
+
+  // Find eye positions in base sprite (value === 3)
+  var eyeCells = [];
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (sprite[r][c] === 3) eyeCells.push({r:r, c:c});
+    }
+  }
+
+  for (var row = 0; row < rows; row++) {
+    for (var col = 0; col < cols; col++) {
+      var cell = sprite[row][col];
+      if (cell === 0) continue;
+
+      var px = startX + col * pxSize;
+      var py = startY + row * pxSize;
+      var isEye = (cell === 3);
+
+      if (isEye) {
+        drawEyeCell(ctx, px, py, pxSize, eyeVariant, row, col, sprite, eyeCells);
+      } else {
+        ctx.fillStyle = (cell === 1) ? ORANGE : (cell === 4) ? WHITE : DARK;
+        ctx.fillRect(px, py, pxSize, pxSize);
+      }
+    }
+  }
+}
+
+function drawEyeCell(ctx, px, py, pxSize, variant, row, col, sprite, eyeCells) {
+  // First fill with orange (background of eye area)
+  ctx.fillStyle = ORANGE;
+  ctx.fillRect(px, py, pxSize, pxSize);
+
+  var ps = Math.max(1, Math.floor(pxSize));
+
+  switch (variant) {
+    case 'normal':
+      ctx.fillStyle = EYE;
+      ctx.fillRect(px, py, ps, ps);
+      break;
+    case 'sleeping':
+      // Eyes close: slit disappears (orange fill already in place, do nothing)
+      break;
+    case 'hungry':
+      // Slit shifted down slightly
+      ctx.fillStyle = EYE;
+      ctx.fillRect(px, py + Math.max(1, Math.floor(ps * 0.3)), ps, ps);
+      break;
+    case 'playing':
+      // Squint: top portion of slit visible
+      ctx.fillStyle = EYE;
+      ctx.fillRect(px, py, ps, Math.max(1, Math.floor(ps * 0.5)));
+      break;
+    case 'dead':
+      // X eyes: two diagonal lines
+      ctx.fillStyle = EYE;
+      for (var i = 0; i < ps; i++) {
+        ctx.fillRect(px + i, py + i, 1, 1);
+        ctx.fillRect(px + ps - 1 - i, py + i, 1, 1);
+      }
+      break;
+    default:
+      ctx.fillStyle = EYE;
+      ctx.fillRect(px, py, ps, ps);
+  }
+}
+
+function drawEgg(cx, cy, crackPhase, scale) {
+  // crackPhase: 0=no crack, 1=cracking (shake), 2=hatching
+  scale = scale || 1;
+  var sprite = EGG_SPRITE;
+  var pxSize = PIXEL_SIZES[0] * scale;
+  var rows   = sprite.length;
+  var cols   = sprite[0].length;
+  var drawW  = cols * pxSize;
+  var drawH  = rows * pxSize;
+  var startX = cx - drawW / 2;
+  var startY = cy - drawH / 2;
+
+  for (var row = 0; row < rows; row++) {
+    for (var col = 0; col < cols; col++) {
+      var cell = sprite[row][col];
+      if (cell === 0) continue;
+      ctx.fillStyle = (cell === 1) ? ORANGE : DARK;
+      ctx.fillRect(startX + col * pxSize, startY + row * pxSize, pxSize, pxSize);
+    }
+  }
+}
+
+var zzParticles = [];
+
+function spawnZzz(cx, cy) {
+  zzParticles.push({
+    x: cx + (Math.random() - 0.5) * 20,
+    y: cy,
+    life: 1.0,
+    char: Math.random() < 0.5 ? 'Z' : 'z',
+    size: 8 + Math.floor(Math.random() * 5)
+  });
+}
+
+function drawZzz() {
+  ctx.save();
+  for (var i = zzParticles.length - 1; i >= 0; i--) {
+    var p = zzParticles[i];
+    ctx.globalAlpha = p.life * 0.7;
+    ctx.fillStyle = '#aaaaff';
+    ctx.font = 'bold ' + p.size + 'px -apple-system, sans-serif';
+    ctx.fillText(p.char, p.x, p.y);
+    p.y -= 0.4;
+    p.life -= 0.008;
+    if (p.life <= 0) zzParticles.splice(i, 1);
+  }
+  ctx.restore();
+}
+
+// ─── MAIN RENDER LOOP ─────────────────────────────────────────────────────────
+var lastZzzSpawn = 0;
+var lastTick = 0;
+
+function render(timestamp) {
+  // Decay check every 30s of real time
+  if (!lastTick || timestamp - lastTick > 30000) {
+    applyTimeDecay();
+    applyStageAdvancement();
+    saveState();
+    updateUI();
+    lastTick = timestamp;
+  }
+
+  ctx.clearRect(0, 0, 240, 208);
+
+  var mood = getMood();
+  var eyeVariant = getEyeVariant(mood);
+  var now = Date.now();
+
+  // Blink logic
+  if (!blinkState.blinking && now > blinkState.nextBlink) {
+    blinkState.blinking = true;
+    setTimeout(function() {
+      blinkState.blinking = false;
+      scheduleNextBlink();
+    }, 150);
+  }
+
+  // Character center
+  var cx = 120;
+  var cy = 95; // within the 208px canvas
+
+  // Compute transforms
+  var offsetY = 0;
+  var scale = 1;
+  var shakeX = 0;
+  var elapsed = 0;
+
+  // Sync sleeping state before running anim switch
+  if (mood === 'sleeping' && anim.type === 'idle') {
+    anim.type = 'sleeping';
+  } else if (mood !== 'sleeping' && anim.type === 'sleeping') {
+    anim.type = 'idle';
+    zzParticles = [];
+  }
+
+  // Advance timed animations
+  if (anim.type !== 'idle' && anim.type !== 'sleeping') {
+    elapsed = now - anim.startTime;
+    if (elapsed >= anim.duration) {
+      if (anim.fromEgg) anim.fromEgg = false;
+      anim.type = (mood === 'sleeping') ? 'sleeping' : 'idle';
+      elapsed = 0;
+    }
+  }
+
+  switch (anim.type) {
+    case 'idle': {
+      var t = now / 2000;
+      offsetY = Math.sin(t * Math.PI * 2) * 3;
+      break;
+    }
+    case 'feed': {
+      var progress = elapsed / anim.duration;
+      // scale 1 -> 1.15 -> 1
+      scale = 1 + Math.sin(progress * Math.PI) * 0.15;
+      break;
+    }
+    case 'play': {
+      // Two vertical jumps
+      var p = elapsed / anim.duration;
+      if (p < 0.5) {
+        offsetY = -Math.sin(p / 0.5 * Math.PI) * 15;
+      } else {
+        offsetY = -Math.sin((p - 0.5) / 0.5 * Math.PI) * 10;
+      }
+      break;
+    }
+    case 'sleeping': {
+      var ts = now / 4000;
+      offsetY = Math.sin(ts * Math.PI * 2) * 1;
+      // Spawn ZZZ periodically
+      if (now - lastZzzSpawn > 1800) {
+        var spriteH = SPRITES[state.stage].length * PIXEL_SIZES[state.stage];
+        spawnZzz(cx + 15, cy - spriteH / 2 - 5);
+        lastZzzSpawn = now;
+      }
+      break;
+    }
+    case 'hatch': {
+      var hp = elapsed / anim.duration;
+      shakeX = Math.sin(hp * Math.PI * 8) * 4 * (1 - hp);
+      if (hp > 0.6) {
+        scale = 0.85 + hp * 0.15;
+      }
+      break;
+    }
+  }
+
+  // Draw ZZZ particles when sleeping (single draw call, updated each frame)
+  if (mood === 'sleeping') {
+    drawZzz();
+  }
+
+  ctx.save();
+  ctx.translate(cx + shakeX, cy + offsetY);
+  if (scale !== 1) ctx.scale(scale, scale);
+  ctx.translate(-cx, -cy);
+
+  if (anim.type === 'hatch' && anim.fromEgg) {
+    // Show egg cracking in first 60% of animation, then reveal baby
+    var hProgress = (anim.duration > 0) ? elapsed / anim.duration : 1;
+    if (hProgress < 0.6) {
+      drawEgg(cx, cy, 1, 1);
+    } else {
+      drawSprite(cx, cy, 1, 'normal', 1);
+    }
+  } else if (state.stage === 0) {
+    drawEgg(cx, cy, 0, 1);
+  } else {
+    drawSprite(cx, cy, state.stage, eyeVariant, 1);
+  }
+
+  ctx.restore();
+
+  requestAnimationFrame(render);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadState();
+applyTimeDecay();
+applyStageAdvancement();
+saveState();
+updateUI();
+scheduleNextBlink();
+
+// Start sleeping anim if appropriate
+if (getMood() === 'sleeping') {
+  anim.type = 'sleeping';
+}
+
+requestAnimationFrame(render);
+
+})();
+</script>
+</body>
+</html>
