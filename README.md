@@ -4,6 +4,8 @@ A collection of custom creations for the Rabbit R1, built from scratch using the
 
 Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) covering everything the official docs don't — hard-won from building these apps.
 
+> **New here?** Check out [SETUP_PROMPT.md](SETUP_PROMPT.md) — a prompt you can paste straight into Claude, ChatGPT, or any AI assistant and have it walk you through the entire setup process.
+
 ---
 
 ## Apps
