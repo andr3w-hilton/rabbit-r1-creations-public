@@ -2,9 +2,17 @@
 
 A collection of custom creations for the Rabbit R1, built from scratch using the native R1 SDK. Voice input, accelerometer, scroll wheel, keyboard editing — all working.
 
-Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of everything figured out building these apps, from voice input and keyboard handling to shake detection, accelerometer, storage and LLM integration.
+## Getting started
 
-> **New here?** Check out [SETUP_PROMPT.md](SETUP_PROMPT.md) — a prompt you can paste straight into Claude, ChatGPT, or any AI assistant and have it walk you through the entire setup process.
+There are three ways to use these apps:
+
+**1. Just scan and go** — the apps are already hosted. Click any Install QR link in the table below, open the page on your computer or phone, and scan the QR code with your R1. Nothing to set up.
+
+**2. Self-host** — clone this repo and host the apps yourself on Netlify, GitHub Pages, or any web server. Use the [setup prompt](SETUP_PROMPT.md) to get an AI assistant to walk you through it.
+
+**3. Gemma Chat (advanced)** — AI chat that requires you to run your own backend. Clone the repo and see the [Bring your own backend](#bring-your-own-backend) section below.
+
+Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of everything figured out building these apps.
 
 ---
 
@@ -54,13 +62,13 @@ gemma-chat is not hosted here — it requires a backend server to proxy requests
 
 ---
 
-## How to use
+## How to self-host
 
-These apps are **templates** — you host them yourself. Nothing is shared or tracked.
+The apps are already hosted and ready to use via the Install QR links above. But if you want to run your own copy — to modify the apps, pin a specific version, or just not depend on someone else's hosting — here's how.
 
 ### 1. Host the app
 
-Pick any free static host. The simplest options:
+Pick any free static host:
 
 - **Netlify** — drag and drop the app folder at [netlify.com](https://netlify.com). Done.
 - **GitHub Pages** — push to a repo and enable Pages in settings.
@@ -70,17 +78,15 @@ Each app is self-contained in its own folder. Host as many or as few as you like
 
 ### 2. Update the install URL
 
-Open the app's `install.html` and replace the existing URL with the URL where you hosted the `index.html`:
+Open the app's `install.html` and replace the existing URL with your own hosted URL:
 
 ```javascript
 var creationUrl = 'https://your-domain.com/shopping-list/';
 ```
 
-The install pages in this repo already point to the hosted GitHub Pages version. If you're self-hosting, just swap the URL to your own domain.
+### 3. Generate the install QR
 
-### 3. Generate a QR code
-
-Go to [boondit.site](https://boondit.site) or any QR generator. The install page generates the QR automatically once you've updated the URL — just open `install.html` in a browser.
+Open `install.html` in a browser — it generates the QR automatically from the URL above.
 
 ### 4. Scan with your R1
 
