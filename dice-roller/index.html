@@ -73,7 +73,7 @@ body {
   border-top: 1px solid #1e1e20;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 3px;
+  gap: 4px;
 }
 #mode-lbl {
   height: 13px;
@@ -322,24 +322,20 @@ document.getElementById('main').addEventListener('pointerdown', function() {
 });
 
 // ── Accelerometer shake detection ────────────────────────────────────────────
-// 60Hz for faster peak capture. Magnitude at rest ≈ 1.0 (gravity only).
-// Threshold 1.2 (was 1.3) — catches a moderate shake without false positives.
-// Jerk threshold 0.25 (was 0.3) — catches quick direction reversals.
+// Mirror the spirit-level pattern exactly: async/await + isAvailable() at 60Hz.
+// Magnitude spike detection: at rest sqrt(x²+y²+z²) ≈ 1.0 (gravity only);
+// a deliberate shake pushes it above ~1.6.
 async function initAccel() {
-  if (typeof window.creationSensors === 'undefined') {
-    initMotion();
-    return;
-  }
+  if (typeof window.creationSensors === 'undefined') return;
   try {
     var available = await window.creationSensors.accelerometer.isAvailable();
-    if (!available) {
-      document.getElementById('hint-lbl').textContent = 'no sensor · scroll · side btn';
-      return;
-    }
+    if (!available) return;
     firstRead = true;
-    var dbg = document.getElementById('dbg');
     window.creationSensors.accelerometer.start(function(data) {
+      // Magnitude spike: at rest ≈ 1.0 (gravity); hard shake pushes above 1.3
       var mag = Math.sqrt(data.x*data.x + data.y*data.y + data.z*data.z);
+
+      // Jerk (rate of change between samples): catches quick direction reversals
       var jmag = 0;
       if (!firstRead) {
         var jx = data.x - px, jy = data.y - py, jz = data.z - pz;
@@ -347,17 +343,14 @@ async function initAccel() {
       }
       px = data.x; py = data.y; pz = data.z;
       firstRead = false;
-      // Show live values so we can calibrate the threshold
-      dbg.textContent = 'mag:' + mag.toFixed(2) + ' j:' + jmag.toFixed(3);
-      if (jmag > 0.08 && canShake) {
+
+      if ((mag > 1.3 || jmag > 0.3) && canShake) {
         canShake = false;
         doRoll();
         setTimeout(function() { canShake = true; }, 1000);
       }
-    }, { frequency: 60 });
-  } catch(e) {
-    document.getElementById('hint-lbl').textContent = 'sensor error · scroll · side btn';
-  }
+    }, { frequency: 30 });
+  } catch(e) {}
 }
 
 document.addEventListener('visibilitychange', function() {
@@ -368,28 +361,6 @@ document.addEventListener('visibilitychange', function() {
     initAccel();
   }
 });
-
-// ── DeviceMotionEvent fallback (if creationSensors not available) ─────────────
-// accelerationIncludingGravity is in m/s². At rest ≈ 9.8 on z-axis.
-// A hard shake spikes the jerk (delta between samples) well above 5 m/s².
-function initMotion() {
-  var mpx = null, mpy = null, mpz = null;
-  window.addEventListener('devicemotion', function(e) {
-    var a = e.accelerationIncludingGravity;
-    if (!a) return;
-    var x = a.x || 0, y = a.y || 0, z = a.z || 0;
-    if (mpx !== null) {
-      var jx = x - mpx, jy = y - mpy, jz = z - mpz;
-      var jmag = Math.sqrt(jx*jx + jy*jy + jz*jz);
-      if (jmag > 8 && canShake) {
-        canShake = false;
-        doRoll();
-        setTimeout(function() { canShake = true; }, 1000);
-      }
-    }
-    mpx = x; mpy = y; mpz = z;
-  });
-}
 
 // ── Keyboard fallbacks for desktop testing ───────────────────────────────────
 document.addEventListener('keydown', function(e) {

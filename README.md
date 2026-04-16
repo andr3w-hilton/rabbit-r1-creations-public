@@ -20,7 +20,6 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
 | 🎲 **dice-roller** | Shake to roll — d4 through d20, single or double dice | Shake = roll · Scroll = change die · Side click = toggle single/double dice |
 | 📝 **notes** | Voice or keyboard notes, review before saving, QR export | Side click = new note · Hold = voice note · Double tap = edit · Long press = delete · QR button = export note |
 | 🐣 **r1-buddy** | Tamagotchi-style pixel-art companion | Tap = feed · Side click = play · Double tap = stats · Long press = sleep |
-| 🤖 **gemma-chat** | AI chat — bring your own backend/model | Hold = speak · Side click = new chat · Scroll = navigate · Tap mute pill = mute TTS |
 
 ---
 
@@ -40,7 +39,6 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
   <tr>
     <td align="center"><img src="screenshots/dice-roller.png" width="120"/><br/><sub>Dice Roller</sub></td>
     <td align="center"><img src="screenshots/r1-buddy.png" width="120"/><br/><sub>R1 Buddy</sub></td>
-    <td align="center"><img src="screenshots/gemma-chat.png" width="120"/><br/><sub>R1 Chat</sub></td>
   </tr>
 </table>
 
@@ -75,18 +73,6 @@ Go to [boondit.site](https://boondit.site) or any QR generator. The install page
 ### 4. Scan with your R1
 
 Open the R1 camera, scan the QR, and install. That's it.
-
----
-
-## Apps that need a backend (gemma-chat)
-
-`gemma-chat` requires a proxy server running a compatible LLM. Set your endpoint in `index.html`:
-
-```javascript
-var PROXY_URL = 'YOUR_GEMMA_PROXY_URL';
-```
-
-You can use any OpenAI-compatible endpoint, Google Gemma via AI Studio, or run your own proxy.
 
 ---
 
