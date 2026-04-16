@@ -44,6 +44,12 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
   </tr>
 </table>
 
+### R1 Buddy Sprite Sheet
+
+All stages and eye variants used in the pixel-art companion:
+
+<img src="screenshots/spritesheet.png" width="100%"/>
+
 ---
 
 ## How to use
