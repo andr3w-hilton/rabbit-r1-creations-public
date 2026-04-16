@@ -10,16 +10,16 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
 
 ## Apps
 
-| App | Description | Controls |
-|---|---|---|
-| 🛒 **shopping-list** | Voice-powered shopping list | Hold = voice add · Long press item = delete · Double tap item = edit · Scroll = navigate |
-| ✅ **todo** | Three lists (Home / AI Dev / Random) | Side click = cycle lists · Hold = voice add · Double tap = edit · Long press = delete · Scroll = navigate |
-| 💪 **rep-tracker** | Daily push-up and row tracker with progress graphs | Side click = cycle exercises · Scroll up/down = log reps · Long press = reset today |
-| ⏱️ **rep-timer** | Workout interval timer | Tap = start/pause · Hold = reset · Scroll = adjust duration · Side click = switch exercise/rest |
-| 🫧 **spirit-level** | Bubble level using the native 60Hz accelerometer | Side click = calibrate · Long press = reset calibration |
-| 🎲 **dice-roller** | Shake to roll — d4 through d20, single or double dice | Shake = roll · Scroll = change die · Side click = toggle single/double dice |
-| 📝 **notes** | Voice or keyboard notes, review before saving, QR export | Side click = new note · Hold = voice note · Double tap = edit · Long press = delete · QR button = export note |
-| 🐣 **r1-buddy** | Tamagotchi-style pixel-art companion | Tap = feed · Side click = play · Double tap = stats · Long press = sleep |
+| App | Install | Description | Controls |
+|---|---|---|---|
+| 🛒 **shopping-list** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/shopping-list/install.html) | Voice-powered shopping list | Hold = voice add · Long press item = delete · Double tap item = edit · Scroll = navigate |
+| ✅ **todo** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/todo/install.html) | Three lists (Home / AI Dev / Random) | Side click = cycle lists · Hold = voice add · Double tap = edit · Long press = delete · Scroll = navigate |
+| 💪 **rep-tracker** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/rep-tracker/install.html) | Daily push-up and row tracker with progress graphs | Side click = cycle exercises · Scroll up/down = log reps · Long press = reset today |
+| ⏱️ **rep-timer** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/rep-timer/install.html) | Workout interval timer | Tap = start/pause · Hold = reset · Scroll = adjust duration · Side click = switch exercise/rest |
+| 🫧 **spirit-level** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/spirit-level/install.html) | Bubble level using the native 60Hz accelerometer | Side click = calibrate · Long press = reset calibration |
+| 🎲 **dice-roller** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/dice-roller/install.html) | Shake to roll — d4 through d20, single or double dice | Shake = roll · Scroll = change die · Side click = toggle single/double dice |
+| 📝 **notes** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/notes/install.html) | Voice or keyboard notes, review before saving, QR export | Side click = new note · Hold = voice note · Double tap = edit · Long press = delete · QR button = export note |
+| 🐣 **r1-buddy** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/r1-buddy/install.html) | Tamagotchi-style pixel-art companion | Tap = feed · Side click = play · Double tap = stats · Long press = sleep |
 
 ---
 
