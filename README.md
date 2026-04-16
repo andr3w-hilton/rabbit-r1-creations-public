@@ -44,6 +44,16 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
 
 ---
 
+## Bring your own backend
+
+| App | Description | Controls |
+|---|---|---|
+| 🤖 **gemma-chat** | AI chat — clone the repo and run your own backend | Hold = speak · Side click = new chat · Scroll = navigate · Tap mute pill = mute TTS |
+
+gemma-chat is not hosted here — it requires a backend server to proxy requests to an LLM. Clone the repo and follow the setup in `gemma-chat/web-server.py`. You can use any Google AI Studio key with Gemma, or swap in any OpenAI-compatible endpoint.
+
+---
+
 ## How to use
 
 These apps are **templates** — you host them yourself. Nothing is shared or tracked.
@@ -60,11 +70,13 @@ Each app is self-contained in its own folder. Host as many or as few as you like
 
 ### 2. Update the install URL
 
-Open the app's `install.html` and replace `https://your-domain.com/app-name/` with the URL where you hosted the `index.html`:
+Open the app's `install.html` and replace the existing URL with the URL where you hosted the `index.html`:
 
 ```javascript
 var creationUrl = 'https://your-domain.com/shopping-list/';
 ```
+
+The install pages in this repo already point to the hosted GitHub Pages version. If you're self-hosting, just swap the URL to your own domain.
 
 ### 3. Generate a QR code
 

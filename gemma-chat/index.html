@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no">
+<title>R1 Chat</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: #0e0e10; color: #fff;
+  font-family: -apple-system, sans-serif;
+  display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none;
+  position: relative;
+}
+
+/* ── Top bar ─────────────────────────────── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px; height: 26px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(254,80,0,0.15);
+  position: relative; z-index: 51;
+}
+#brand-wrap { display: flex; flex-direction: column; gap: 1px; }
+#brand { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #FE5000; }
+#model-name { font-size: 7px; letter-spacing: 1px; color: rgba(255,255,255,0.2); }
+#state-pill {
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 8px;
+  background: rgba(254,80,0,0.12); color: rgba(254,80,0,0.7);
+  transition: all 0.25s;
+}
+#state-pill.listening { background: rgba(254,80,0,0.3); color: #ff8c4c; }
+#state-pill.thinking {
+  background: rgba(254,80,0,0.2); color: #ff7a35;
+  animation: pulse-pill 1.2s ease-in-out infinite;
+}
+#state-pill.speaking { background: rgba(254,80,0,0.35); color: #ffaa80; }
+#state-pill.muted { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.25); }
+@keyframes pulse-pill { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+/* ── Chat area ───────────────────────────── */
+#chat-wrap { flex: 1; overflow: hidden; position: relative; }
+#chat-content {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 6px 8px; display: flex; flex-direction: column; gap: 5px;
+}
+
+/* Bubbles */
+.bubble {
+  max-width: 178px; padding: 5px 8px; border-radius: 10px;
+  font-size: 11px; line-height: 1.45; word-break: break-word;
+}
+.bubble.gemma {
+  align-self: flex-start;
+  background: rgba(254,80,0,0.12); color: rgba(255,255,255,0.85);
+  border-bottom-left-radius: 3px;
+}
+.bubble.user {
+  align-self: flex-end;
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8);
+  border-bottom-right-radius: 3px;
+}
+
+/* Thinking dots */
+.thinking-dots {
+  align-self: flex-start;
+  background: rgba(254,80,0,0.1);
+  padding: 7px 12px; border-radius: 10px; border-bottom-left-radius: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+.dot { width: 5px; height: 5px; border-radius: 50%; background: #FE5000; animation: blink 1.4s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity: 0.2; transform: scale(0.75); } 40% { opacity: 1; transform: scale(1); } }
+
+/* ── Bottom bar ──────────────────────────── */
+#bottombar {
+  height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border-top: 1px solid rgba(254,80,0,0.1);
+}
+#hint { font-size: 9px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; }
+#hint span { color: rgba(254,80,0,0.5); }
+
+/* ── Welcome overlay ─────────────────────── */
+#welcome {
+  position: absolute; inset: 0; background: #0e0e10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; z-index: 50;
+}
+#welcome.hidden { display: none; }
+#gem-icon { width: 52px; height: 52px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+#welcome h2 { font-size: 16px; font-weight: 700; color: #FE5000; letter-spacing: 1px; }
+#welcome p { font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.5; padding: 0 20px; }
+
+/* ── Mic pulse ring ──────────────────────── */
+#mic-ring {
+  position: absolute; bottom: 24px; right: 10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid #FE5000; opacity: 0; pointer-events: none;
+}
+#mic-ring.active { opacity: 1; animation: ring-pulse 0.8s ease-out infinite; }
+@keyframes ring-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
+
+/* ── History panel ───────────────────────── */
+#history-panel {
+  position: absolute; inset: 0; background: #0e0e10;
+  display: flex; flex-direction: column; z-index: 60;
+  transform: translateX(100%); transition: transform 0.25s ease;
+}
+#history-panel.open { transform: translateX(0); }
+
+#history-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px; height: 26px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+#history-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.5); }
+#history-close { font-size: 9px; color: rgba(254,80,0,0.6); letter-spacing: 0.5px; }
+
+#history-wrap { flex: 1; overflow: hidden; position: relative; }
+#history-content { position: absolute; top: 0; left: 0; right: 0; }
+
+.history-item {
+  padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: background 0.15s;
+}
+.history-item.active { background: rgba(254,80,0,0.08); }
+.history-item:active { background: rgba(254,80,0,0.12); }
+.history-meta {
+  font-size: 8px; color: rgba(255,255,255,0.25); letter-spacing: 0.5px;
+  margin-bottom: 3px; display: flex; justify-content: space-between;
+}
+.history-meta .msg-count { color: rgba(254,80,0,0.4); }
+.history-preview { font-size: 11px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#history-empty {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; padding: 20px;
+}
+
+#history-bottombar {
+  height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+#history-hint { font-size: 9px; color: rgba(255,255,255,0.18); }
+
+/* ── Export QR overlay ───────────────────── */
+#export-overlay {
+  position: absolute; inset: 0; background: #0e0e10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; z-index: 80;
+  transform: translateY(100%); transition: transform 0.25s ease;
+}
+#export-overlay.open { transform: translateY(0); }
+#export-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.4); }
+#export-qr { width: 160px; height: 160px; }
+#export-url { font-size: 8px; color: rgba(254,80,0,0.5); text-align: center; padding: 0 20px; word-break: break-all; }
+#export-close { font-size: 9px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+
+/* Long-press progress ring on history items */
+.history-item { position: relative; }
+.hold-ring {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; opacity: 0; transition: opacity 0.1s;
+}
+.history-item.holding .hold-ring { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="brand-wrap">
+    <div id="brand">GEMMA 4</div>
+    <div id="model-name">gemma-4-26b-a4b-it</div>
+  </div>
+  <div id="state-pill">READY</div>
+</div>
+
+<div id="chat-wrap">
+  <div id="chat-content"></div>
+</div>
+
+<div id="bottombar">
+  <div id="hint">Hold <span>◉</span> speak &nbsp;·&nbsp; Click new &nbsp;·&nbsp; tap pill mute</div>
+</div>
+
+<div id="welcome">
+  <svg id="gem-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="26,4 46,16 46,36 26,48 6,36 6,16" fill="rgba(254,80,0,0.15)" stroke="#FE5000" stroke-width="1.5"/>
+    <polygon points="26,4 36,16 26,28 16,16" fill="rgba(254,80,0,0.3)"/>
+    <polygon points="6,16 16,16 26,28 6,36" fill="rgba(254,80,0,0.1)"/>
+    <polygon points="46,16 36,16 26,28 46,36" fill="rgba(254,80,0,0.2)"/>
+    <polygon points="6,36 26,28 46,36 26,48" fill="rgba(254,80,0,0.12)"/>
+    <circle cx="26" cy="26" r="4" fill="#FE5000" opacity="0.8"/>
+  </svg>
+  <h2>Gemma 4</h2>
+  <p>Hold the side button<br>and speak to begin</p>
+</div>
+
+<div id="mic-ring"></div>
+
+<!-- Export QR overlay -->
+<div id="export-overlay">
+  <div id="export-title">SCAN TO VIEW</div>
+  <canvas id="export-qr" width="160" height="160"></canvas>
+  <div id="export-url"></div>
+  <div id="export-close">tap anywhere to close</div>
+</div>
+
+<!-- History panel -->
+<div id="history-panel">
+  <div id="history-topbar">
+    <div id="history-title">HISTORY</div>
+    <div id="history-close">◉ TO CLOSE</div>
+  </div>
+  <div id="history-wrap">
+    <div id="history-content"></div>
+  </div>
+  <div id="history-bottombar">
+    <div id="history-hint">tap to load &nbsp;·&nbsp; hold to export ↗</div>
+  </div>
+</div>
+
+<script>
+var PROXY_URL = 'YOUR_GEMMA_PROXY_URL';
+var MAX_HISTORY = 10;
+var CHAT_WRAP_H = 238;
+var HISTORY_WRAP_H = 238;
+var ITEM_H = 52; // approx height per history item
+
+var statePill    = document.getElementById('state-pill');
+var chatContent  = document.getElementById('chat-content');
+var welcome      = document.getElementById('welcome');
+var micRing      = document.getElementById('mic-ring');
+var historyPanel = document.getElementById('history-panel');
+var historyContent = document.getElementById('history-content');
+
+var scrollTop      = 0;
+var histScrollTop  = 0;
+var isListening    = false;
+var isThinking     = false;
+var isSpeaking     = false;
+var isMuted        = false;
+var thinkingEl     = null;
+var historyOpen    = false;
+var messages       = [];
+
+// Double-tap detection
+var lastSideClick  = 0;
+var singleTapTimer = null;
+var exportOpen     = false;
+
+// ── Storage helpers ──────────────────────────
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem('gemma_history') || '[]'); } catch(e) { return []; }
+}
+function saveHistory(h) {
+  try { localStorage.setItem('gemma_history', JSON.stringify(h)); } catch(e) {}
+}
+function saveCurrentChat() {
+  try { localStorage.setItem('gemma_chat', JSON.stringify(messages)); } catch(e) {}
+}
+function loadCurrentChat() {
+  try { return JSON.parse(localStorage.getItem('gemma_chat') || '[]'); } catch(e) { return []; }
+}
+
+// Push current conversation into history (if it has messages)
+function archiveCurrentChat() {
+  if (!messages.length) return;
+  var h = loadHistory();
+  h.unshift({ id: Date.now(), timestamp: Date.now(), messages: messages.slice() });
+  if (h.length > MAX_HISTORY) h = h.slice(0, MAX_HISTORY);
+  saveHistory(h);
+}
+
+// ── Boot: restore last session ───────────────
+(function() {
+  messages = loadCurrentChat();
+  if (messages.length) {
+    messages.forEach(function(m) { appendBubble(m.role, m.content); });
+    scrollToBottom();
+    welcome.classList.add('hidden');
+  }
+})();
+
+// ── State ────────────────────────────────────
+function setState(s) {
+  if (isMuted && s === 'READY') {
+    statePill.textContent = 'MUTE';
+    statePill.className   = 'muted';
+    return;
+  }
+  statePill.textContent = s;
+  statePill.className   = s.toLowerCase();
+}
+
+// ── Scroll (chat) ────────────────────────────
+function scrollToBottom() {
+  scrollTop = Math.max(0, chatContent.offsetHeight - CHAT_WRAP_H);
+  chatContent.style.top = '-' + scrollTop + 'px';
+}
+function doScroll(delta) {
+  var max = Math.max(0, chatContent.offsetHeight - CHAT_WRAP_H);
+  scrollTop = Math.max(0, Math.min(max, scrollTop + delta));
+  chatContent.style.top = '-' + scrollTop + 'px';
+}
+
+// ── Scroll (history) ────────────────────────
+function doHistoryScroll(delta) {
+  var max = Math.max(0, historyContent.offsetHeight - HISTORY_WRAP_H);
+  histScrollTop = Math.max(0, Math.min(max, histScrollTop + delta));
+  historyContent.style.top = '-' + histScrollTop + 'px';
+}
+
+// ── Bubbles ──────────────────────────────────
+function appendBubble(role, text) {
+  var el = document.createElement('div');
+  el.className = 'bubble ' + role;
+  el.textContent = text;
+  chatContent.appendChild(el);
+  refreshGemmaBubbles();
+  return el;
+}
+
+function refreshGemmaBubbles() {
+  var bubbles = chatContent.querySelectorAll('.bubble.gemma');
+  var len = bubbles.length;
+  for (var i = 0; i < len; i++) {
+    var b = bubbles[i];
+    var age = len - 1 - i; // 0 = newest
+    if (age === 0) {
+      b.style.background = 'rgba(254,80,0,0.85)';
+      b.style.color = '#fff';
+    } else if (age === 1) {
+      b.style.background = 'rgba(254,80,0,0.12)';
+      b.style.color = 'rgba(255,255,255,0.85)';
+    } else {
+      b.style.background = 'rgba(254,80,0,0.04)';
+      b.style.color = 'rgba(255,255,255,0.4)';
+    }
+  }
+}
+function showThinking() {
+  if (thinkingEl) return;
+  thinkingEl = document.createElement('div');
+  thinkingEl.className = 'thinking-dots';
+  thinkingEl.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  chatContent.appendChild(thinkingEl);
+  scrollToBottom();
+}
+function hideThinking() {
+  if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+}
+
+// ── History panel ────────────────────────────
+function formatTime(ts) {
+  var d = new Date(ts);
+  var now = new Date();
+  var isToday = d.toDateString() === now.toDateString();
+  var yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  var isYesterday = d.toDateString() === yesterday.toDateString();
+  var time = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  if (isToday) return 'Today ' + time;
+  if (isYesterday) return 'Yesterday ' + time;
+  return d.getDate() + '/' + (d.getMonth()+1) + ' ' + time;
+}
+
+function renderHistory() {
+  var h = loadHistory();
+  historyContent.innerHTML = '';
+  histScrollTop = 0;
+  historyContent.style.top = '0';
+
+  if (!h.length) {
+    historyContent.innerHTML = '<div id="history-empty">No saved conversations yet.<br>Start a new chat to build history.</div>';
+    return;
+  }
+
+  h.forEach(function(convo, idx) {
+    var firstUser = convo.messages.find(function(m) { return m.role === 'user'; });
+    var preview = firstUser ? firstUser.content : '(empty)';
+    var msgCount = convo.messages.length;
+
+    var item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML =
+      '<div class="history-meta">' +
+        '<span>' + formatTime(convo.timestamp) + '</span>' +
+        '<span class="msg-count">' + msgCount + ' msg' + (msgCount !== 1 ? 's' : '') + '</span>' +
+      '</div>' +
+      '<div class="history-preview">' + preview.slice(0, 60) + '</div>';
+
+    var holdTimer = null;
+    var didLongPress = false;
+
+    item.addEventListener('pointerdown', function() {
+      didLongPress = false;
+      item.classList.add('active');
+      holdTimer = setTimeout(function() {
+        didLongPress = true;
+        item.classList.remove('active');
+        closeHistory();
+        exportConversation(convo.messages);
+      }, 600);
+    });
+    item.addEventListener('pointerup', function() {
+      clearTimeout(holdTimer);
+      item.classList.remove('active');
+      if (!didLongPress) loadConversation(idx);
+    });
+    item.addEventListener('pointerleave', function() {
+      clearTimeout(holdTimer);
+      item.classList.remove('active');
+    });
+    item.addEventListener('pointercancel', function() {
+      clearTimeout(holdTimer);
+      item.classList.remove('active');
+    });
+
+    historyContent.appendChild(item);
+  });
+}
+
+function openHistory() {
+  historyOpen = true;
+  renderHistory();
+  historyPanel.classList.add('open');
+}
+
+function closeHistory() {
+  historyOpen = false;
+  historyPanel.classList.remove('open');
+}
+
+// ── Export ───────────────────────────────────
+var exportOverlay = document.getElementById('export-overlay');
+var exportQrCanvas = document.getElementById('export-qr');
+var exportUrlEl = document.getElementById('export-url');
+
+function exportConversation(msgs) {
+  fetch(PROXY_URL.replace('/gemma-proxy', '/chat-export'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: msgs })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.url) throw new Error('no url');
+    showExportQR(data.url);
+  })
+  .catch(function(e) {
+    appendBubble('gemma', 'Export failed: ' + e.message);
+    scrollToBottom();
+  });
+}
+
+function showExportQR(url) {
+  exportUrlEl.textContent = url;
+  drawQR(exportQrCanvas, url);
+  exportOpen = true;
+  exportOverlay.classList.add('open');
+}
+
+function closeExport() {
+  exportOpen = false;
+  exportOverlay.classList.remove('open');
+}
+
+// Minimal QR code renderer using canvas (no library needed for short URLs)
+// Uses a simple approach: encode URL as a data URI and draw it
+function drawQR(canvas, url) {
+  // Use QRServer API to get QR as image, draw onto canvas
+  var img = new Image();
+  var size = 160;
+  img.crossOrigin = 'anonymous';
+  img.onload = function() {
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0e0e10';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 0, 0, size, size);
+  };
+  img.onerror = function() {
+    // Fallback: just show the URL text
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0e0e10';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#FE5000';
+    ctx.font = '8px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR unavailable', size/2, size/2);
+    ctx.fillText('see URL below', size/2, size/2 + 14);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=0e0e10&color=ffffff&data=' + encodeURIComponent(url);
+}
+
+// Tap anywhere on export overlay = close
+exportOverlay.addEventListener('pointerup', function() {
+  if (exportOpen) closeExport();
+});
+
+function loadConversation(idx) {
+  var h = loadHistory();
+  if (!h[idx]) return;
+
+  // Archive current if it has messages
+  archiveCurrentChat();
+
+  // Load selected conversation
+  messages = h[idx].messages.slice();
+
+  // Remove from history (it's now active again)
+  h.splice(idx, 1);
+  saveHistory(h);
+  saveCurrentChat();
+
+  // Render
+  chatContent.innerHTML = '';
+  scrollTop = 0;
+  messages.forEach(function(m) { appendBubble(m.role, m.content); });
+  scrollToBottom();
+  welcome.classList.add('hidden');
+
+  closeHistory();
+}
+
+// ── Send to Gemma ────────────────────────────
+function sendToGemma(userText) {
+  if (!userText) return;
+  welcome.classList.add('hidden');
+  messages.push({ role: 'user', content: userText });
+  appendBubble('user', userText);
+  saveCurrentChat();
+  scrollToBottom();
+
+  isThinking = true;
+  setState('THINKING');
+  showThinking();
+
+  fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: messages.map(function(m) { return { role: m.role, content: m.content }; }) })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    hideThinking();
+    isThinking = false;
+    var reply = (data.text || data.error || 'No response').trim();
+    messages.push({ role: 'model', content: reply });
+    appendBubble('gemma', reply);
+    saveCurrentChat();
+    scrollToBottom();
+    speak(reply);
+  })
+  .catch(function(err) {
+    hideThinking();
+    isThinking = false;
+    setState('READY');
+    appendBubble('gemma', 'Error: ' + (err.message || 'network error'));
+    scrollToBottom();
+  });
+}
+
+// ── Mute toggle ──────────────────────────────
+statePill.addEventListener('pointerup', function(e) {
+  e.stopPropagation();
+  isMuted = !isMuted;
+  if (isMuted) {
+    statePill.textContent = 'MUTE';
+    statePill.className = 'muted';
+  } else {
+    setState('READY');
+  }
+});
+
+// ── TTS ──────────────────────────────────────
+function speak(text) {
+  if (isMuted) { setState('READY'); return; }
+  if (typeof PluginMessageHandler !== 'undefined') {
+    isSpeaking = true;
+    setState('SPEAKING');
+    PluginMessageHandler.postMessage(JSON.stringify({
+      message: text,
+      useLLM: false,
+      wantsR1Response: true
+    }));
+    // No completion callback available yet — reset after estimated duration
+    setTimeout(function() { isSpeaking = false; setState('READY'); }, Math.max(2000, text.length * 60));
+    return;
+  }
+  if (!window.speechSynthesis) { setState('READY'); return; }
+  window.speechSynthesis.cancel();
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 1.05; utt.pitch = 1.0;
+  utt.onstart = function() { isSpeaking = true; setState('SPEAKING'); };
+  utt.onend   = function() { isSpeaking = false; setState('READY'); };
+  utt.onerror = function() { isSpeaking = false; setState('READY'); };
+  window.speechSynthesis.speak(utt);
+}
+
+// ── STT ──────────────────────────────────────
+window.onPluginMessage = function(data) {
+  if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e) {} }
+  if (!data || data.type !== 'sttEnded') return;
+  isListening = false;
+  micRing.classList.remove('active');
+  setState('READY');
+  var transcript = (data.transcript || '').trim();
+  if (transcript) sendToGemma(transcript);
+};
+
+window.addEventListener('longPressStart', function() {
+  if (isListening || historyOpen) return;
+  isListening = true;
+  setState('LISTENING');
+  micRing.classList.add('active');
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('start');
+});
+
+window.addEventListener('longPressEnd', function() {
+  if (!isListening) return;
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('stop');
+});
+
+// ── Side button: single = new chat, double = history ──
+window.addEventListener('sideClick', function() {
+  if (isListening) return;
+  if (exportOpen) { closeExport(); return; }
+  if (historyOpen) { closeHistory(); return; }
+
+  var now = Date.now();
+  var gap = now - lastSideClick;
+  lastSideClick = now;
+
+  if (gap < 400) {
+    // Double tap — open history
+    clearTimeout(singleTapTimer);
+    singleTapTimer = null;
+    lastSideClick = 0;
+    openHistory();
+  } else {
+    // Potential single tap — wait to confirm it's not a double
+    clearTimeout(singleTapTimer);
+    singleTapTimer = setTimeout(function() {
+      singleTapTimer = null;
+      // Single tap confirmed — archive and start new chat
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      archiveCurrentChat();
+      messages = [];
+      chatContent.innerHTML = '';
+      scrollTop = 0;
+      chatContent.style.top = '0';
+      localStorage.removeItem('gemma_chat');
+      welcome.classList.remove('hidden');
+      setState('READY');
+      isSpeaking = false;
+    }, 400);
+  }
+});
+
+// ── Scroll wheel ─────────────────────────────
+window.addEventListener('scrollUp',   function() { historyOpen ? doHistoryScroll(-ITEM_H) : doScroll(-28); });
+window.addEventListener('scrollDown', function() { historyOpen ? doHistoryScroll(ITEM_H)  : doScroll(28);  });
+
+// ── Keyboard fallbacks ────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') window.dispatchEvent(new Event('sideClick'));
+  if (e.key === 'ArrowUp')   window.dispatchEvent(new Event('scrollUp'));
+  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
+  if (e.key === ' ' && !e.repeat) { e.preventDefault(); window.dispatchEvent(new Event('longPressStart')); }
+});
+document.addEventListener('keyup', function(e) {
+  if (e.key === ' ') window.dispatchEvent(new Event('longPressEnd'));
+});
+
+// Desktop: type to send
+(function() {
+  var typedText = '';
+  document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      if (typedText.trim()) { sendToGemma(typedText.trim()); typedText = ''; }
+    } else if (e.key !== ' ') { typedText += e.key; }
+  });
+})();
+</script>
+</body>
+</html>

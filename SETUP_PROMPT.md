@@ -21,25 +21,36 @@ Here's what needs doing:
    - dice-roller (shake to roll, d4–d20)
    - notes (voice or keyboard notes with QR export)
    - r1-buddy (Tamagotchi-style companion)
-   - gemma-chat (AI chat — requires your own backend)
+   - gemma-chat (AI chat — requires your own backend, see step 6)
    Ask me which ones I want to set up.
 
 2. **Host the apps** — each app is a plain HTML file that needs to be hosted at a public URL. 
    The easiest free option is Netlify (drag and drop the folder at netlify.com). 
    Ask me where I want to host them and help me through it if needed.
 
-3. **Update the install URL** — once hosted, open each app's install.html and replace 
-   `https://your-domain.com/app-name/` with the actual hosted URL. 
-   For example: `https://mysite.netlify.app/shopping-list/`
+   Note: if you just want to use the pre-hosted versions of the standard apps (everything 
+   except gemma-chat), you can skip hosting — the install pages already point to 
+   https://andr3w-hilton.github.io/rabbit-r1-creations-public/ and the QR codes will 
+   work as-is.
+
+3. **Update the install URL** — if you're self-hosting, open each app's install.html and 
+   replace the existing URL with your own hosted URL. For example:
+   `https://mysite.netlify.app/shopping-list/`
+   
+   If you're using the pre-hosted GitHub Pages version, skip this step.
 
 4. **Generate the install QR** — open the install.html in a browser. It will automatically 
-   generate a QR code. If the URL isn't updating, help me regenerate it.
+   generate a QR code pointing to the app URL.
 
 5. **Scan and install on the R1** — open the R1 camera, point at the QR code, and install.
 
-6. **For gemma-chat only** — this app needs an AI backend. Open gemma-chat/index.html and 
-   replace `YOUR_GEMMA_PROXY_URL` with your own endpoint. Ask me if I need help setting 
-   one up.
+6. **For gemma-chat only** — this app needs a backend server to proxy requests to an LLM.
+   The repo includes web-server.py which handles this. You'll need:
+   - A server to run it on (a cheap VPS, Railway, Fly.io, etc.)
+   - A Google AI Studio API key (free tier available at aistudio.google.com)
+   Set your API key as the GOOGLE_AI_API_KEY environment variable, then run web-server.py.
+   Once running, open gemma-chat/index.html and replace `YOUR_GEMMA_PROXY_URL` with your 
+   server's URL. Then update install.html with your hosted gemma-chat URL and scan the QR.
 
 Important context about the R1:
 - The R1 is a small AI device with a 240x282px screen
