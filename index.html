@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rabbit R1 Creations</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #141416;
+    --bg3: #1a1a1d;
+    --accent: #FE5000;
+    --accent-dim: rgba(254,80,0,0.15);
+    --accent-glow: rgba(254,80,0,0.06);
+    --border: rgba(255,255,255,0.07);
+    --text: #ffffff;
+    --text-secondary: rgba(255,255,255,0.45);
+    --text-dim: rgba(255,255,255,0.2);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Noise texture overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.018;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    background: rgba(14,14,16,0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  nav .inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo-mark {
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .nav-logo-mark svg {
+    width: 13px;
+    height: 13px;
+    fill: #fff;
+  }
+
+  .nav-logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 96px 0 80px;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse at center top, rgba(254,80,0,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.1s;
+  }
+
+  .hero-title {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero-title span {
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 480px;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.3s;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .hero-stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .hero-stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .hero-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .section-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* ── Grid ── */
+  .apps-section {
+    padding-bottom: 96px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card:hover {
+    border-color: rgba(254,80,0,0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(254,80,0,0.12);
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.30s; }
+  .card:nth-child(7) { animation-delay: 0.35s; }
+  .card:nth-child(8) { animation-delay: 0.40s; }
+  .card:nth-child(9) { animation-delay: 0.45s; }
+
+  .card-screenshot {
+    width: 100%;
+    aspect-ratio: 240 / 282;
+    background: var(--bg3);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-screenshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .card:hover .card-screenshot img {
+    transform: scale(1.03);
+  }
+
+  .card-screenshot-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.1px;
+  }
+
+  .card-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .card-footer {
+    padding: 0 16px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .card-install {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    padding: 5px 10px;
+    border: 1px solid rgba(254,80,0,0.3);
+    border-radius: 6px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .card-install:hover {
+    background: var(--accent-dim);
+    border-color: rgba(254,80,0,0.5);
+  }
+
+  .card-install svg {
+    width: 9px;
+    height: 9px;
+    fill: currentColor;
+    opacity: 0.8;
+  }
+
+  /* ── Tips banner ── */
+  .tips-banner {
+    margin-bottom: 96px;
+    padding: 28px 32px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.5s;
+  }
+
+  .tips-banner::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+
+  .tips-text h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .tips-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-width: 480px;
+  }
+
+  .tips-links {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+
+  .link-pill-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .link-pill-primary:hover {
+    background: #e04500;
+  }
+
+  .link-pill-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .link-pill-secondary:hover {
+    border-color: rgba(255,255,255,0.18);
+    color: var(--text);
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+  }
+
+  footer .inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-left {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .hero { padding: 64px 0 56px; }
+    .hero-title { letter-spacing: -1px; }
+    .tips-banner { flex-direction: column; align-items: flex-start; }
+    .tips-links { flex-wrap: wrap; }
+    nav .nav-links { display: none; }
+  }
+
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card-body { padding: 10px 12px 12px; }
+    .card-footer { padding: 0 12px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 12 12"><rect x="1" y="1" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/><rect x="1" y="7" width="4" height="4" rx="1"/><rect x="7" y="7" width="4" height="4" rx="1"/></svg>
+      </div>
+      <span class="nav-logo-text">R1 Creations</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="README.md">Docs</a></li>
+      <li><a href="R1_CREATION_TIPS.md">Tips &amp; Tricks</a></li>
+      <li><a href="https://github.com/andr3w-hilton/rabbit-r1-creations-public">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+
+  <section class="hero">
+    <div class="hero-eyebrow">Open Source · Self-Hosted · No Tracking</div>
+    <h1 class="hero-title">Rabbit R1<br><span>Creations</span></h1>
+    <p class="hero-sub">Nine custom apps built from scratch using the native R1 SDK — voice, accelerometer, scroll wheel, and keyboard all working.</p>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <span class="hero-stat-num">9</span>
+        <span class="hero-stat-label">Apps</span>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">240px</span>
+        <span class="hero-stat-label">Native</span>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">0</span>
+        <span class="hero-stat-label">Dependencies</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="apps-section">
+    <div class="section-header">
+      <span class="section-title">Apps</span>
+      <span class="section-count">9 creations</span>
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/shopping-list.png" alt="Shopping List" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Shopping List</div>
+          <div class="card-desc">Voice-powered shopping list</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Voice · Edit</span>
+          <a class="card-install" href="shopping-list/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/todo.png" alt="Todo" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Todo</div>
+          <div class="card-desc">Three switchable lists with voice add and edit</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Voice · Lists</span>
+          <a class="card-install" href="todo/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/rep-tracker.png" alt="Rep Tracker" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Rep Tracker</div>
+          <div class="card-desc">Daily push-up and row tracker with progress graphs</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Fitness · Graph</span>
+          <a class="card-install" href="rep-tracker/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/rep-timer.png" alt="Rep Timer" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Rep Timer</div>
+          <div class="card-desc">Workout interval timer with scroll-adjustable duration</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Fitness · Timer</span>
+          <a class="card-install" href="rep-timer/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/spirit-level.png" alt="Spirit Level" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Spirit Level</div>
+          <div class="card-desc">Bubble level using the native 60Hz accelerometer</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Sensor · Tool</span>
+          <a class="card-install" href="spirit-level/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/dice-roller.png" alt="Dice Roller" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Dice Roller</div>
+          <div class="card-desc">Shake to roll d4–d20, single or double dice</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Shake · Game</span>
+          <a class="card-install" href="dice-roller/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/notes.png" alt="Notes" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Notes</div>
+          <div class="card-desc">Voice or keyboard notes with QR export</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Voice · Export</span>
+          <a class="card-install" href="notes/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/r1-buddy.png" alt="R1 Buddy" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">R1 Buddy</div>
+          <div class="card-desc">Tamagotchi-style pixel-art companion</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Pixel · Pet</span>
+          <a class="card-install" href="r1-buddy/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
+          <img src="screenshots/gemma-chat.png" alt="R1 Chat" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">R1 Chat</div>
+          <div class="card-desc">AI chat — bring your own backend and model</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">AI · Voice</span>
+          <a class="card-install" href="gemma-chat/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="tips-banner">
+    <div class="tips-text">
+      <h3>Building your own?</h3>
+      <p>A running log of everything figured out building these apps — voice input, keyboard handling, accelerometer, shake detection, storage, and LLM integration.</p>
+    </div>
+    <div class="tips-links">
+      <a class="link-pill link-pill-primary" href="R1_CREATION_TIPS.md">Tips &amp; Tricks</a>
+      <a class="link-pill link-pill-secondary" href="README.md">Setup Guide</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="inner">
+    <div class="footer-left">
+      Plain HTML. No build step. Self-host and scan.
+    </div>
+    <div class="footer-links">
+      <a href="README.md">README</a>
+      <a href="R1_CREATION_TIPS.md">Tips</a>
+      <a href="https://github.com/andr3w-hilton/rabbit-r1-creations-public">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
