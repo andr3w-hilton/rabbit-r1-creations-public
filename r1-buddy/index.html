@@ -14,115 +14,49 @@ body {
   position: relative;
 }
 #top-bar {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 24px;
+  position: absolute; top: 0; left: 0; right: 0; height: 24px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 10px;
   border-bottom: 1px solid rgba(254,80,0,0.18);
 }
-#top-bar .name {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px;
-  color: #FF6720;
-}
-#top-bar .stage-lbl {
-  font-size: 9px; font-weight: 600; letter-spacing: 1px;
-  color: rgba(255,255,255,0.35);
-}
-#main-canvas {
-  position: absolute; top: 24px; left: 0;
-  display: block;
-}
+#top-bar .name { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #FF6720; }
+#top-bar .stage-lbl { font-size: 9px; font-weight: 600; letter-spacing: 1px; color: rgba(255,255,255,0.35); }
+#main-canvas { position: absolute; top: 24px; left: 0; display: block; }
 #bottom-bar {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 50px;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
   padding: 4px 10px 6px;
   display: flex; flex-direction: column; gap: 3px;
   border-top: 1px solid rgba(254,80,0,0.12);
 }
-.stat-row {
-  display: flex; align-items: center; gap: 6px;
-}
-.stat-label {
-  font-size: 8px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.35);
-  width: 10px; text-align: center;
-}
-.bar-track {
-  flex: 1; height: 5px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 3px; overflow: hidden;
-}
-.bar-fill {
-  height: 100%; border-radius: 3px;
-  transition: width 0.4s ease;
-}
+.stat-row { display: flex; align-items: center; gap: 6px; }
+.stat-label { font-size: 8px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.35); width: 10px; text-align: center; }
+.bar-track { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
 #hunger-fill { background: #FF6720; }
-#happy-fill { background: rgba(255,255,255,0.55); }
-#hint {
-  font-size: 8px; color: rgba(255,255,255,0.2);
-  text-align: center; letter-spacing: 0.5px;
-  margin-top: 1px;
-}
-
-/* Stats overlay */
+#happy-fill  { background: rgba(255,255,255,0.55); }
+#hint { font-size: 8px; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.5px; margin-top: 1px; }
 #stats-panel {
   position: absolute; top: 0; right: -240px; width: 240px; height: 282px;
   background: rgba(14,14,16,0.97);
   display: flex; flex-direction: column;
-  padding: 28px 18px 18px;
-  gap: 0;
+  padding: 28px 18px 18px; gap: 0;
   transition: right 0.25s cubic-bezier(0.22,1,0.36,1);
   border-left: 1px solid rgba(254,80,0,0.3);
   z-index: 10;
 }
 #stats-panel.open { right: 0; }
-#stats-panel .sp-title {
-  font-size: 9px; font-weight: 700; letter-spacing: 2px;
-  color: rgba(255,255,255,0.3); margin-bottom: 4px;
-}
-#stats-panel .sp-val {
-  font-size: 14px; font-weight: 700; color: #FF6720;
-  letter-spacing: 1px; margin-bottom: 2px;
-}
-#stats-panel .sp-sub {
-  font-size: 10px; color: rgba(255,255,255,0.45);
-  margin-bottom: 14px;
-}
-#stats-panel .sp-divider {
-  height: 1px; background: rgba(255,255,255,0.1);
-  margin-bottom: 14px;
-}
-#stats-panel .sp-stat-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 10px 6px; margin-bottom: 14px;
-}
-#stats-panel .sp-stat-item {
-  display: flex; flex-direction: column; gap: 2px;
-}
-#stats-panel .sp-stat-label {
-  font-size: 8px; font-weight: 700; letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.35);
-}
-#stats-panel .sp-stat-val {
-  font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
-}
-#stats-panel .sp-controls {
-  display: flex; flex-direction: column; gap: 5px;
-  margin-bottom: 14px;
-}
-#stats-panel .sp-ctrl-row {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 0.3px;
-}
-#stats-panel .sp-ctrl-key {
-  font-size: 8px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.55); min-width: 52px;
-}
-#stats-panel .sp-close {
-  margin-top: auto;
-  font-size: 9px; color: rgba(255,255,255,0.2);
-  text-align: center; letter-spacing: 1px;
-}
+#stats-panel .sp-title { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+#stats-panel .sp-val   { font-size: 14px; font-weight: 700; color: #FF6720; letter-spacing: 1px; margin-bottom: 2px; }
+#stats-panel .sp-sub   { font-size: 10px; color: rgba(255,255,255,0.45); margin-bottom: 14px; }
+#stats-panel .sp-divider { height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 14px; }
+#stats-panel .sp-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 6px; margin-bottom: 14px; }
+#stats-panel .sp-stat-item { display: flex; flex-direction: column; gap: 2px; }
+#stats-panel .sp-stat-label { font-size: 8px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); }
+#stats-panel .sp-stat-val   { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+#stats-panel .sp-controls { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+#stats-panel .sp-ctrl-row  { display: flex; align-items: center; gap: 8px; font-size: 9px; color: rgba(255,255,255,0.3); }
+#stats-panel .sp-ctrl-key  { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.55); min-width: 56px; }
+#stats-panel .sp-close { margin-top: auto; font-size: 9px; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -143,14 +77,14 @@ body {
     <span class="stat-label">♥</span>
     <div class="bar-track"><div class="bar-fill" id="happy-fill"></div></div>
   </div>
-  <div id="hint">tap feed · click play · click×2 stats</div>
+  <div id="hint">tap feed · scroll treat/cuddle · hold=menu</div>
 </div>
 
 <div id="stats-panel">
   <div class="sp-title">STAGE</div>
   <div class="sp-val" id="sp-stage-val">EGG</div>
   <div class="sp-title" style="margin-top:8px">AGE</div>
-  <div class="sp-sub" id="sp-age-val">0m</div>
+  <div class="sp-sub" id="sp-age-val">0d 0h</div>
   <div class="sp-divider"></div>
   <div class="sp-stat-grid">
     <div class="sp-stat-item"><div class="sp-stat-label">HUNGER</div><div class="sp-stat-val" id="sp-hunger-val">—</div></div>
@@ -161,38 +95,31 @@ body {
   <div class="sp-divider"></div>
   <div class="sp-controls">
     <div class="sp-ctrl-row"><span class="sp-ctrl-key">TAP</span>feed +25 hunger</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">CLICK</span>play +20 joy, -5 hunger</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">CLICK×2</span>open stats</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑</span>treat +hunger +joy</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↓</span>cuddle +joy</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE</span>play +20 joy</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE×2</span>open stats</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">HOLD</span>open menu</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SHAKE</span>excite +10 joy</div>
   </div>
   <div class="sp-divider"></div>
   <div class="sp-close">tap or esc to close</div>
 </div>
 
 <script>
-(function() {
+(function(){
 'use strict';
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+// ── constants ──────────────────────────────────────────────────────────────────
 var ORANGE = '#FF6720';
 var DARK   = 'rgba(0,0,0,0.4)';
 var EYE    = '#1a0800';
-var BG     = '#0e0e10';
 var WHITE  = '#ffffff';
 
-var STAGE_NAMES = ['EGG', 'BABY', 'KID', 'ADULT', 'ELDER'];
-// Stage advancement thresholds in milliseconds from born
-var STAGE_THRESHOLDS = [
-  0,
-  10 * 60 * 1000,        // 10 minutes  -> baby
-  4 * 60 * 60 * 1000,    // 4 hours     -> kid
-  24 * 60 * 60 * 1000,   // 24 hours    -> adult
-  72 * 60 * 60 * 1000    // 72 hours    -> elder
-];
+var STAGE_NAMES      = ['EGG','BABY','KID','ADULT','ELDER'];
+var STAGE_THRESHOLDS = [0, 10*60*1000, 4*3600*1000, 24*3600*1000, 72*3600*1000];
 
-// ─── SPRITES ──────────────────────────────────────────────────────────────────
-// 0=transparent, 1=orange, 2=dark divider, 3=eye/dark
-
-// EGG sprite 12×10
+// ── sprites ────────────────────────────────────────────────────────────────────
 var EGG_SPRITE = [
   [0,0,0,1,1,1,1,1,1,0,0,0],
   [0,0,1,1,1,1,1,1,1,1,0,0],
@@ -205,31 +132,6 @@ var EGG_SPRITE = [
   [0,0,1,1,1,1,1,1,1,1,0,0],
   [0,0,0,1,1,1,1,1,1,0,0,0]
 ];
-
-// ELDER sprite — KID base + single-pixel white cane (21×13)
-// Col 18: orange arm pixels on arm rows (4-7), transparent elsewhere
-// Col 19: white cane — single column shaft rows 8-12
-// Col 20: one orange thumb pixel (row 6) wrapping around cane
-// Eyes: vertical slit columns at cols 7 & 12 (rows 3-7), value=3 for blinking
-var ELDER_SPRITE = [
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 0
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 1 — old eyes removed
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],  // row 2 — old eyes removed
-  [0,0,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,0,0,0],  // row 3 — slit eyes
-  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 4
-  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 5
-  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,1],  // row 6  — thumb (col 20=orange)
-  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],  // row 7
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,0],  // row 8  — cane shaft
-  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],  // row 9
-  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],  // row 10
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0],  // row 11
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0],  // row 12 — cane tip
-];
-
-// KID sprite 20×11 (16 body + 2 arm pixels each side)
-// Arms protrude at rows 4-7 (mid-body)
-// Eyes: vertical slit columns at cols 7 & 12 (rows 3-7), value=3 for blinking
 var KID_SPRITE = [
   [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
   [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
@@ -243,537 +145,729 @@ var KID_SPRITE = [
   [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
   [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0]
 ];
-
-var SPRITES = [EGG_SPRITE, KID_SPRITE, KID_SPRITE, KID_SPRITE, ELDER_SPRITE];
+var ELDER_SPRITE = [
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+  [0,0,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,0,0,0],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,1],
+  [1,1,1,1,1,1,1,3,1,1,1,1,3,1,1,1,1,1,1,4,0],
+  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,0],
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],
+  [0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,4,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0]
+];
+var SPRITES     = [EGG_SPRITE, KID_SPRITE, KID_SPRITE, KID_SPRITE, ELDER_SPRITE];
 var PIXEL_SIZES = [7, 5, 7, 9, 9];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-var state = {
-  born: 0, lastSeen: 0,
-  hunger: 80, happiness: 80,
-  stage: 0
-};
+// ── pet state ──────────────────────────────────────────────────────────────────
+var state = { born:0, lastSeen:0, hunger:80, happiness:80, stage:0 };
 
 function loadState() {
   try {
     var raw = localStorage.getItem('r1_buddy');
     if (raw) {
-      var parsed = JSON.parse(raw);
-      state.born      = parsed.born      || Date.now();
-      state.lastSeen  = parsed.lastSeen  || Date.now();
-      state.hunger    = typeof parsed.hunger    === 'number' ? parsed.hunger    : 80;
-      state.happiness = typeof parsed.happiness === 'number' ? parsed.happiness : 80;
-      state.stage     = typeof parsed.stage     === 'number' ? parsed.stage     : 0;
+      var p = JSON.parse(raw);
+      state.born      = p.born      || Date.now();
+      state.lastSeen  = p.lastSeen  || Date.now();
+      state.hunger    = typeof p.hunger    === 'number' ? p.hunger    : 80;
+      state.happiness = typeof p.happiness === 'number' ? p.happiness : 80;
+      state.stage     = typeof p.stage     === 'number' ? p.stage     : 0;
     } else {
-      // First boot
-      state.born      = Date.now();
-      state.lastSeen  = Date.now();
-      state.hunger    = 80;
-      state.happiness = 80;
-      state.stage     = 0;
+      state.born = state.lastSeen = Date.now();
       saveState();
     }
-  } catch (e) {
-    state.born = Date.now();
-    state.lastSeen = Date.now();
-  }
+  } catch(e) { state.born = state.lastSeen = Date.now(); }
 }
-
 function saveState() {
   try {
     localStorage.setItem('r1_buddy', JSON.stringify({
-      born:      state.born,
-      lastSeen:  Date.now(),
-      hunger:    Math.round(state.hunger),
-      happiness: Math.round(state.happiness),
-      stage:     state.stage
+      born: state.born, lastSeen: Date.now(),
+      hunger: Math.round(state.hunger), happiness: Math.round(state.happiness),
+      stage: state.stage
     }));
-  } catch (e) {}
+  } catch(e) {}
 }
-
 function applyTimeDecay() {
-  var now = Date.now();
-  var elapsedMinutes = (now - state.lastSeen) / 60000;
-  if (elapsedMinutes > 0) {
-    state.hunger    = Math.max(0, state.hunger    - elapsedMinutes / 20);
-    state.happiness = Math.max(0, state.happiness - elapsedMinutes / 30);
+  var now = Date.now(), mins = (now - state.lastSeen) / 60000;
+  if (mins > 0) {
+    state.hunger    = Math.max(0, state.hunger    - mins / 20);
+    state.happiness = Math.max(0, state.happiness - mins / 30);
   }
   state.lastSeen = now;
 }
-
 function applyStageAdvancement() {
-  var age = Date.now() - state.born;
-  var newStage = 0;
+  var age = Date.now() - state.born, newStage = 0;
   for (var i = STAGE_THRESHOLDS.length - 1; i >= 0; i--) {
     if (age >= STAGE_THRESHOLDS[i]) { newStage = i; break; }
   }
   if (newStage > state.stage) {
     var wasEgg = state.stage === 0;
     state.stage = newStage;
-    if (wasEgg) triggerHatch();
+    if (wasEgg) { triggerHatch(); }
+    else        { say('i grew up!', 2500); spawnConfetti(120, 95); }
   }
 }
-
 function getMood() {
-  var hour = new Date().getHours();
-  if (hour >= 22 || hour < 7) return 'sleeping';
-  if (anim.type === 'play')   return 'playing';
-  if (state.hunger < 10)      return 'very_hungry';
-  if (state.hunger < 30)      return 'hungry';
+  var h = new Date().getHours();
+  if (h >= 22 || h < 7)    return 'sleeping';
+  if (anim.type === 'play') return 'playing';
+  if (state.hunger < 10)   return 'very_hungry';
+  if (state.hunger < 30)   return 'hungry';
   return 'happy';
 }
 
-// ─── ANIMATION STATE ──────────────────────────────────────────────────────────
-var anim = {
-  type: 'idle',       // idle | feed | play | sleeping | hatch
-  startTime: 0,
-  duration: 0,
-  fromEgg: false      // true when hatch started from egg stage
-};
+// ── animation state ────────────────────────────────────────────────────────────
+var anim = { type:'idle', startTime:0, duration:0, fromEgg:false };
+var blinkState = { blinking:false, nextBlink:0 };
 
-var blinkState = {
-  blinking: false,
-  nextBlink: 0
-};
+function scheduleNextBlink() { blinkState.nextBlink = Date.now() + 4000 + Math.random()*2000; }
+function triggerAnim(type, dur) { anim.type=type; anim.startTime=Date.now(); anim.duration=dur; }
+function triggerHatch() { anim.type='hatch'; anim.startTime=Date.now(); anim.duration=800; anim.fromEgg=true; }
 
-var particles = []; // ZZZ particles
+// ── particles ──────────────────────────────────────────────────────────────────
+var zzParticles  = [], lastZzzSpawn = 0;
+var confetti     = [];
+var sparkles     = [];
 
-function scheduleNextBlink() {
-  blinkState.nextBlink = Date.now() + 4000 + Math.random() * 2000;
+function spawnZzz(cx, ty) {
+  zzParticles.push({ x:cx+(Math.random()-0.5)*20, y:ty, life:1.0,
+    char:Math.random()<0.5?'Z':'z', size:8+Math.floor(Math.random()*5) });
+}
+function spawnConfetti(cx, cy) {
+  for (var i=0; i<22; i++) {
+    var a=(Math.PI*2*i)/22, sp=1.5+Math.random()*2.5;
+    confetti.push({ x:cx, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.5,
+      life:1.0, color:Math.random()<0.6?ORANGE:WHITE, size:2+Math.floor(Math.random()*2) });
+  }
+}
+function spawnSparkle(x, y) {
+  for (var i=0; i<8; i++) {
+    var a=(Math.PI*2*i)/8;
+    sparkles.push({ x:x, y:y, vx:Math.cos(a)*2.2, vy:Math.sin(a)*2.2, life:1.0 });
+  }
 }
 
-function triggerAnim(type, duration) {
-  anim.type = type;
-  anim.startTime = Date.now();
-  anim.duration = duration;
+// ── speech bubble ──────────────────────────────────────────────────────────────
+var bubble = { text:'', until:0 };
+var lastIdleSay = 0;
+
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function say(text, ms) { bubble.text=text; bubble.until=Date.now()+(ms||1800); }
+
+function drawBubble(cx, topY) {
+  if (!bubble.text) return;
+  var now = Date.now();
+  if (now >= bubble.until) { bubble.text=''; return; }
+  var alpha = Math.min(1, (bubble.until-now)/400);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = 'bold 9px -apple-system,sans-serif';
+  var tw = ctx.measureText(bubble.text).width;
+  var bw = tw+12, bh = 16;
+  var bx = Math.max(4, Math.min(236-bw, cx-bw/2));
+  var by = Math.max(4, topY-bh-8);
+  ctx.fillStyle = '#fff';
+  rrect(bx, by, bw, bh, 4); ctx.fill();
+  if (by+bh < topY) {
+    var tx = Math.max(bx+6, Math.min(bx+bw-6, cx));
+    ctx.beginPath();
+    ctx.moveTo(tx-4, by+bh); ctx.lineTo(tx+4, by+bh); ctx.lineTo(tx, by+bh+5);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle = '#1a0800';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(bubble.text, bx+bw/2, by+bh/2);
+  ctx.restore();
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
 }
 
-function triggerHatch() {
-  anim.type = 'hatch';
-  anim.startTime = Date.now();
-  anim.duration = 800;
-  anim.fromEgg = true;
-}
-
-// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+// ── home actions ───────────────────────────────────────────────────────────────
 function doFeed() {
-  if (state.stage === 0) return; // can't feed egg
-  var mood = getMood();
-  var bonus = (mood === 'sleeping') ? 0.5 : 1;
-  state.hunger = Math.min(100, state.hunger + 25 * bonus);
-  if (mood === 'very_hungry') state.happiness = Math.min(100, state.happiness + 10);
-  triggerAnim('feed', 300);
-  saveState();
-  updateUI();
+  if (state.stage===0) return;
+  var bonus = getMood()==='sleeping' ? 0.5 : 1;
+  state.hunger = Math.min(100, state.hunger+25*bonus);
+  if (getMood()==='very_hungry') state.happiness = Math.min(100, state.happiness+10);
+  say(state.hunger>=95 ? pick(['so full!','stuffed~']) : pick(['nom nom!','yum!','so good!']));
+  triggerAnim('feed', 300); saveState(); updateUI();
 }
-
 function doPlay() {
-  if (state.stage === 0) return;
-  var mood = getMood();
-  var bonus = (mood === 'sleeping') ? 0.5 : 1;
-  state.happiness = Math.min(100, state.happiness + 20 * bonus);
-  state.hunger    = Math.max(0, state.hunger - 5);
-  triggerAnim('play', 600);
-  saveState();
-  updateUI();
+  if (state.stage===0) return;
+  var bonus = getMood()==='sleeping' ? 0.5 : 1;
+  state.happiness = Math.min(100, state.happiness+20*bonus);
+  state.hunger    = Math.max(0,   state.hunger-5);
+  say(pick(['wheee!','yay!','fun!']));
+  triggerAnim('play', 600); saveState(); updateUI();
+}
+function doTreat() {
+  if (state.stage===0) return;
+  var bonus = getMood()==='sleeping' ? 0.5 : 1;
+  state.hunger    = Math.min(100, state.hunger+10*bonus);
+  state.happiness = Math.min(100, state.happiness+15*bonus);
+  say(pick(['yum! ★','treat!','so tasty!']));
+  triggerAnim('feed', 400); saveState(); updateUI();
+}
+function doCuddle() {
+  if (state.stage===0) return;
+  var bonus = getMood()==='sleeping' ? 0.3 : 1;
+  state.happiness = Math.min(100, state.happiness+12*bonus);
+  say(pick(['♥','purr~','nice~']));
+  triggerAnim('play', 300); saveState(); updateUI();
+}
+function resetPet() {
+  state.born = state.lastSeen = Date.now();
+  state.hunger = state.happiness = 80; state.stage = 0;
+  anim.type = 'idle'; anim.fromEgg = false;
+  zzParticles=[]; confetti=[]; sparkles=[]; bubble.text='';
+  saveState(); updateUI();
 }
 
-var statsOpen = false;
+// ── mode & menu ────────────────────────────────────────────────────────────────
+var mode = 'home'; // home | menu | catch | fish
+var MENU_ITEMS = ['CATCH GAME','FISHING','RESET PET'];
+var menuIdx = 0;
 
-function openStats() {
-  var panel = document.getElementById('stats-panel');
-  var stageNames = STAGE_NAMES;
-  var age = Date.now() - state.born;
-  var days  = Math.floor(age / 86400000);
-  var hours = Math.floor((age % 86400000) / 3600000);
-  var mins  = Math.floor((age % 3600000)  / 60000);
-  var ageStr = days + 'd ' + hours + 'h';
+function openMenu()  { mode='menu'; menuIdx=0; updateHint(); }
+function closeMenu() { mode='home'; updateHint(); }
+function exitGame()  { mode='home'; updateHint(); }
+function confirmMenu() {
+  var sel = MENU_ITEMS[menuIdx]; closeMenu();
+  if (sel==='CATCH GAME') catchStart();
+  else if (sel==='FISHING') fishStart();
+  else if (sel==='RESET PET') resetPet();
+}
+function updateHint() {
+  var hints = {
+    home:  'tap feed · scroll treat/cuddle · hold=menu',
+    menu:  'scroll select · tap ok · side close',
+    catch: 'scroll ↑← ↓→ to catch  ·  side exit',
+    fish:  '↑ cast · ↓ reel on bite  ·  side exit'
+  };
+  document.getElementById('hint').textContent = hints[mode] || hints.home;
+}
 
-  document.getElementById('sp-stage-val').textContent = stageNames[state.stage];
-  document.getElementById('sp-age-val').textContent   = ageStr;
+function drawMenu() {
+  ctx.fillStyle = 'rgba(14,14,16,0.93)';
+  ctx.fillRect(0,0,240,208);
+  ctx.fillStyle = 'rgba(255,103,32,0.5)';
+  ctx.font = 'bold 8px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('MENU', 120, 52);
+  for (var i=0; i<MENU_ITEMS.length; i++) {
+    var iy = 82+i*30, sel = i===menuIdx;
+    if (sel) {
+      ctx.fillStyle = 'rgba(255,103,32,0.13)';
+      ctx.fillRect(30, iy-14, 180, 22);
+      ctx.strokeStyle = 'rgba(255,103,32,0.45)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(30, iy-14, 180, 22);
+    }
+    ctx.fillStyle = sel ? ORANGE : 'rgba(255,255,255,0.45)';
+    ctx.font = 'bold 11px -apple-system,sans-serif';
+    ctx.fillText(MENU_ITEMS[i], 120, iy);
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.font = '8px -apple-system,sans-serif';
+  ctx.fillText('scroll to pick  ·  tap to go', 120, 182);
+  ctx.textAlign = 'left';
+}
 
-  document.getElementById('sp-hunger-val').textContent = Math.round(state.hunger) + '%';
-  document.getElementById('sp-joy-val').textContent    = Math.round(state.happiness) + '%';
+// ── catch game ─────────────────────────────────────────────────────────────────
+var CG = {
+  bx:120, treats:[], missed:0, caught:0,
+  startTime:0, spawnNext:0, spawnInterval:1400,
+  done:false, doneTime:0,
+  DURATION:30000, MAX_MISS:3, DONE_PAUSE:2500
+};
+var T_NORMAL = { color:ORANGE,    size:5, star:false };
+var T_GOLD   = { color:'#FFD700', size:4, star:true  };
 
-  var moodLabels = { happy: 'HAPPY', hungry: 'HUNGRY', very_hungry: 'STARVING',
-                     sleeping: 'SLEEPING', playing: 'PLAYING' };
-  document.getElementById('sp-mood-val').textContent = moodLabels[getMood()] || 'HAPPY';
+function catchStart() {
+  if (state.stage===0) return;
+  CG.bx=120; CG.treats=[]; CG.missed=0; CG.caught=0; CG.done=false;
+  CG.spawnInterval=1400;
+  CG.startTime = CG.spawnNext = Date.now();
+  mode='catch'; updateHint();
+}
+function catchScrollLeft()  { if (!CG.done) CG.bx = Math.max(22,  CG.bx-24); }
+function catchScrollRight() { if (!CG.done) CG.bx = Math.min(218, CG.bx+24); }
 
-  var nextStage = state.stage + 1;
-  if (nextStage >= STAGE_THRESHOLDS.length) {
-    document.getElementById('sp-next-val').textContent = 'ELDER';
-  } else {
-    var remaining = STAGE_THRESHOLDS[nextStage] - age;
-    if (remaining <= 0) {
-      document.getElementById('sp-next-val').textContent = 'SOON';
-    } else {
-      var rh = Math.floor(remaining / 3600000);
-      var rm = Math.floor((remaining % 3600000) / 60000);
-      document.getElementById('sp-next-val').textContent = rh > 0 ? rh + 'h ' + rm + 'm' : rm + 'm';
+function catchUpdate(now) {
+  if (CG.done) { if (now-CG.doneTime>CG.DONE_PAUSE) exitGame(); return; }
+  var elapsed = now-CG.startTime;
+  if (elapsed>=CG.DURATION || CG.missed>=CG.MAX_MISS) {
+    CG.done=true; CG.doneTime=now;
+    state.hunger    = Math.min(100, state.hunger    + Math.min(35, CG.caught*3));
+    state.happiness = Math.min(100, state.happiness + Math.max(-10, CG.caught*2-CG.missed*3));
+    saveState(); updateUI(); return;
+  }
+  if (now>=CG.spawnNext) {
+    var type = Math.random()<0.18 ? T_GOLD : T_NORMAL;
+    CG.treats.push({ x:18+Math.random()*204, y:0, vx:(Math.random()-0.5)*0.6, type:type });
+    CG.spawnInterval = Math.max(750, 1400-elapsed/80);
+    CG.spawnNext = now+CG.spawnInterval;
+  }
+  var speed = 1.8+elapsed/18000;
+  for (var i=CG.treats.length-1; i>=0; i--) {
+    var t=CG.treats[i];
+    t.y+=speed; t.x=Math.max(5,Math.min(235,t.x+t.vx));
+    if (t.y>=152 && t.y<=174 && Math.abs(t.x-CG.bx)<22) {
+      CG.caught++; spawnSparkle(t.x,t.y); CG.treats.splice(i,1);
+    } else if (t.y>185) { CG.missed++; CG.treats.splice(i,1); }
+  }
+}
+
+function catchDraw(now) {
+  var W=240, H=208, elapsed=now-CG.startTime;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(254,80,0,0.18)'; ctx.fillRect(0,177,W,2);
+
+  ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.textAlign='left'; ctx.fillStyle=ORANGE;
+  ctx.fillText('★ '+CG.caught, 8, 17);
+  ctx.textAlign='right'; ctx.fillStyle='rgba(255,255,255,0.38)';
+  ctx.fillText(Math.max(0,Math.ceil((CG.DURATION-elapsed)/1000))+'s', W-8, 17);
+  for (var li=0; li<CG.MAX_MISS; li++) {
+    ctx.fillStyle = li<CG.missed ? 'rgba(255,80,0,0.2)' : ORANGE;
+    ctx.fillText('♥', W-8-(CG.MAX_MISS-1-li)*14, 32);
+  }
+  ctx.textAlign='center';
+
+  for (var j=0; j<CG.treats.length; j++) {
+    var t=CG.treats[j]; ctx.fillStyle=t.type.color;
+    if (t.type.star) { drawStar5(t.x,t.y,t.type.size); }
+    else { ctx.fillRect(t.x-t.type.size/2, t.y-t.type.size/2, t.type.size, t.type.size); }
+  }
+
+  ctx.save();
+  for (var si=sparkles.length-1; si>=0; si--) {
+    var sp=sparkles[si];
+    ctx.globalAlpha=sp.life; ctx.fillStyle=ORANGE;
+    ctx.fillRect(sp.x,sp.y,2,2);
+    sp.x+=sp.vx; sp.y+=sp.vy; sp.life-=0.09;
+    if (sp.life<=0) sparkles.splice(si,1);
+  }
+  ctx.restore();
+
+  if (!CG.done) drawSpriteAt(CG.bx, 163, Math.max(1,state.stage), 'normal', 0.5);
+
+  if (CG.done) {
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,55,W,90);
+    ctx.fillStyle=WHITE; ctx.font='bold 15px -apple-system,sans-serif';
+    ctx.fillText(CG.caught+' caught!', W/2, 93);
+    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.fillText(CG.missed>=CG.MAX_MISS?'too many misses':'time up!', W/2, 111);
+    drawSpriteAt(W/2, 150, Math.max(1,state.stage), 'playing', 0.65);
+  }
+}
+
+function drawStar5(x, y, r) {
+  ctx.beginPath();
+  for (var i=0; i<5; i++) {
+    var a=(i*4*Math.PI)/5-Math.PI/2, xi=x+Math.cos(a)*r, yi=y+Math.sin(a)*r;
+    i===0?ctx.moveTo(xi,yi):ctx.lineTo(xi,yi);
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+// ── fish game ──────────────────────────────────────────────────────────────────
+var WATER_TOP = 128;
+var FB_X=42, FB_Y=82, LINE_X=58, LINE_Y=90, LINE_MAX=90;
+
+var FG = {
+  st:'idle', lineP:0, castP:0, reelP:0, bobPhase:0,
+  waitEnd:0, nibbleEnd:0, result:null, resultEnd:0,
+  fishX:LINE_X, score:0,
+  NIBBLE_WIN:1500, RESULT_PAUSE:2000
+};
+
+function fishStart() {
+  if (state.stage===0) return;
+  FG.st='idle'; FG.lineP=0; FG.castP=0; FG.reelP=0;
+  FG.result=null; FG.score=0;
+  mode='fish'; updateHint();
+}
+function fishScrollUp() {
+  if (FG.st==='idle') { FG.st='casting'; FG.castP=0; }
+}
+function fishScrollDown() {
+  if (FG.st==='nibble') { FG.st='reeling'; FG.reelP=0; }
+  else if (FG.st==='waiting') {
+    FG.st='result'; FG.result='missed'; FG.resultEnd=Date.now()+FG.RESULT_PAUSE;
+  }
+}
+
+function fishUpdate(now) {
+  switch(FG.st) {
+    case 'casting':
+      FG.castP=Math.min(1,FG.castP+0.04); FG.lineP=FG.castP;
+      if (FG.castP>=1) {
+        FG.st='waiting'; FG.bobPhase=0;
+        FG.waitEnd=now+2000+Math.random()*4000;
+        FG.fishX=LINE_X+(Math.random()-0.5)*16;
+      }
+      break;
+    case 'waiting':
+      FG.bobPhase+=0.04;
+      if (now>=FG.waitEnd) { FG.st='nibble'; FG.bobPhase=0; FG.nibbleEnd=now+FG.NIBBLE_WIN; }
+      break;
+    case 'nibble':
+      FG.bobPhase+=0.22;
+      if (now>=FG.nibbleEnd) { FG.st='result'; FG.result='missed'; FG.resultEnd=now+FG.RESULT_PAUSE; }
+      break;
+    case 'reeling':
+      FG.reelP=Math.min(1,FG.reelP+0.055); FG.lineP=1-FG.reelP;
+      if (FG.reelP>=1) {
+        FG.st='result'; FG.result='caught'; FG.resultEnd=now+FG.RESULT_PAUSE; FG.score++;
+        state.hunger    = Math.min(100, state.hunger+7);
+        state.happiness = Math.min(100, state.happiness+5);
+        saveState(); updateUI();
+      }
+      break;
+    case 'result':
+      if (now>=FG.resultEnd) { FG.st='idle'; FG.lineP=0; FG.castP=0; FG.reelP=0; FG.result=null; }
+      break;
+  }
+}
+
+function fishDraw(now) {
+  var W=240, H=208;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,WATER_TOP);
+  var wv=Math.sin(now/900)*2;
+  ctx.fillStyle='rgba(18,48,108,0.62)'; ctx.fillRect(0,WATER_TOP+wv,W,H-WATER_TOP);
+  ctx.strokeStyle='rgba(70,130,255,0.12)'; ctx.lineWidth=1;
+  for (var wi=0; wi<4; wi++) {
+    var wy=WATER_TOP+wv+12+wi*18, wx=Math.sin(now/1300+wi*1.2)*10;
+    ctx.beginPath(); ctx.moveTo(15+wx,wy); ctx.lineTo(W-15-wx,wy); ctx.stroke();
+  }
+
+  ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.textAlign='right'; ctx.fillStyle=ORANGE;
+  ctx.fillText('fish: '+FG.score, W-8, 17);
+
+  var lbl={idle:'READY',casting:'CASTING',waiting:'WAITING...',
+           nibble:'!! BITE !!',reeling:'REELING!',result:FG.result==='caught'?'GOT ONE!':'GOT AWAY...'};
+  ctx.textAlign='left';
+  ctx.fillStyle = FG.st==='nibble' ? ORANGE : 'rgba(255,255,255,0.35)';
+  if (FG.st==='nibble') ctx.globalAlpha=0.6+Math.sin(now/90)*0.4;
+  ctx.font='bold 9px -apple-system,sans-serif';
+  ctx.fillText(lbl[FG.st]||'', 8, 17);
+  ctx.globalAlpha=1;
+
+  if (FG.lineP>0 || FG.st==='casting') {
+    var hookY=LINE_Y+FG.lineP*LINE_MAX;
+    var bob = FG.st==='waiting'?Math.sin(FG.bobPhase)*1.5 : FG.st==='nibble'?Math.sin(FG.bobPhase)*6 : 0;
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(LINE_X,LINE_Y); ctx.lineTo(LINE_X,hookY+bob); ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(LINE_X,hookY+bob+3,3,Math.PI*0.15,Math.PI*1.2); ctx.stroke();
+    if (FG.st==='nibble'||FG.st==='reeling'||(FG.st==='result'&&FG.result==='caught')) {
+      var fb=FG.st==='nibble'?Math.sin(FG.bobPhase*1.4)*3:0;
+      drawFish(FG.fishX, hookY+bob+fb);
     }
   }
 
-  panel.classList.add('open');
-  statsOpen = true;
+  if (FG.st==='nibble') {
+    var trem=Math.max(0,(FG.nibbleEnd-now)/FG.NIBBLE_WIN);
+    ctx.fillStyle='rgba(255,103,32,0.22)'; ctx.fillRect(60,H-11,120,5);
+    ctx.fillStyle=ORANGE; ctx.fillRect(60,H-11,120*trem,5);
+  }
+
+  if (FG.st==='idle') {
+    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.fillText('scroll ↑ to cast',W/2,H-12); ctx.textAlign='left';
+  }
+
+  if (FG.st==='result') {
+    var rem=FG.resultEnd-now;
+    ctx.globalAlpha=rem<400?rem/400:1;
+    ctx.fillStyle=FG.result==='caught'?ORANGE:'rgba(255,255,255,0.65)';
+    ctx.font='bold 15px -apple-system,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(FG.result==='caught'?'★ GOT ONE! ★':'got away...', W*0.6, H/2+8);
+    ctx.globalAlpha=1; ctx.textAlign='left';
+  }
+
+  drawSpriteAt(FB_X, FB_Y, Math.max(1,state.stage), 'normal', 0.6);
 }
 
-function closeStats() {
-  document.getElementById('stats-panel').classList.remove('open');
-  statsOpen = false;
+function drawFish(x, y) {
+  ctx.fillStyle='rgba(65,148,255,0.9)';
+  ctx.fillRect(x-7,y-3,10,6);
+  ctx.beginPath(); ctx.moveTo(x+3,y-3); ctx.lineTo(x+9,y-1); ctx.lineTo(x+9,y+3);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#000'; ctx.fillRect(x-5,y-1,2,2);
 }
 
-// ─── R1 EVENT HANDLING ────────────────────────────────────────────────────────
-var lastSideClick = 0;
+// ── sprite drawing ─────────────────────────────────────────────────────────────
+var canvas = document.getElementById('main-canvas');
+var ctx    = canvas.getContext('2d');
 
+function drawSpriteAt(cx, cy, stage, eyeVariant, scale) {
+  scale=scale||1;
+  var spr=SPRITES[stage], px=PIXEL_SIZES[stage]*scale;
+  var rows=spr.length, cols=spr[0].length;
+  var sx=cx-(cols*px)/2, sy=cy-(rows*px)/2;
+  for (var r=0;r<rows;r++) for (var c=0;c<cols;c++) {
+    var cell=spr[r][c]; if (!cell) continue;
+    var fpx=sx+c*px, fpy=sy+r*px;
+    if (cell===3) drawEyeCell(fpx,fpy,px,eyeVariant||'normal');
+    else { ctx.fillStyle=cell===1?ORANGE:cell===4?WHITE:DARK; ctx.fillRect(fpx,fpy,px,px); }
+  }
+}
+function drawEgg(cx, cy) {
+  var s=EGG_SPRITE, px=PIXEL_SIZES[0];
+  var sx=cx-(s[0].length*px)/2, sy=cy-(s.length*px)/2;
+  for (var r=0;r<s.length;r++) for (var c=0;c<s[r].length;c++) {
+    if (!s[r][c]) continue;
+    ctx.fillStyle=s[r][c]===1?ORANGE:DARK;
+    ctx.fillRect(sx+c*px,sy+r*px,px,px);
+  }
+}
+function drawEyeCell(px, py, ps, variant) {
+  ctx.fillStyle=ORANGE; ctx.fillRect(px,py,ps,ps);
+  var p=Math.max(1,Math.floor(ps));
+  if (variant==='sleeping') return;
+  ctx.fillStyle=EYE;
+  if      (variant==='hungry')  ctx.fillRect(px, py+Math.max(1,Math.floor(p*0.3)), p, p);
+  else if (variant==='playing') ctx.fillRect(px, py, p, Math.max(1,Math.floor(p*0.5)));
+  else                          ctx.fillRect(px, py, p, p);
+}
+
+// ── stats panel ────────────────────────────────────────────────────────────────
+var statsOpen = false;
+function openStats() {
+  var age=Date.now()-state.born, d=Math.floor(age/86400000), h=Math.floor((age%86400000)/3600000);
+  document.getElementById('sp-stage-val').textContent  = STAGE_NAMES[state.stage];
+  document.getElementById('sp-age-val').textContent    = d+'d '+h+'h';
+  document.getElementById('sp-hunger-val').textContent = Math.round(state.hunger)+'%';
+  document.getElementById('sp-joy-val').textContent    = Math.round(state.happiness)+'%';
+  var ml={happy:'HAPPY',hungry:'HUNGRY',very_hungry:'STARVING',sleeping:'SLEEPING',playing:'PLAYING'};
+  document.getElementById('sp-mood-val').textContent   = ml[getMood()]||'HAPPY';
+  var ns=state.stage+1;
+  if (ns>=STAGE_THRESHOLDS.length) { document.getElementById('sp-next-val').textContent='MAX'; }
+  else {
+    var rem=STAGE_THRESHOLDS[ns]-age;
+    if (rem<=0) document.getElementById('sp-next-val').textContent='SOON';
+    else {
+      var rh=Math.floor(rem/3600000), rm=Math.floor((rem%3600000)/60000);
+      document.getElementById('sp-next-val').textContent=rh>0?rh+'h '+rm+'m':rm+'m';
+    }
+  }
+  document.getElementById('stats-panel').classList.add('open'); statsOpen=true;
+}
+function closeStats() { document.getElementById('stats-panel').classList.remove('open'); statsOpen=false; }
+
+// ── events ─────────────────────────────────────────────────────────────────────
+var lastSide=0;
 window.addEventListener('sideClick', function() {
   if (statsOpen) { closeStats(); return; }
-  var now = Date.now();
-  if (now - lastSideClick < 400) {
-    openStats();
-    lastSideClick = 0;
-  } else {
-    lastSideClick = now;
-    setTimeout(function() {
-      if (lastSideClick === now) doPlay();
-    }, 400);
-  }
+  if (mode==='menu') { closeMenu(); return; }
+  if (mode!=='home') { exitGame(); return; }
+  var now=Date.now();
+  if (now-lastSide<400) { openStats(); lastSide=0; }
+  else { lastSide=now; setTimeout(function(){ if(lastSide===now) doPlay(); },400); }
 });
-
 window.addEventListener('longPressEnd', function() {
-  state.born      = Date.now();
-  state.lastSeen  = Date.now();
-  state.hunger    = 80;
-  state.happiness = 80;
-  state.stage     = 0;
-  anim.type       = 'idle';
-  zzParticles     = [];
-  saveState();
-  updateUI();
+  if (statsOpen) return;
+  if (mode==='menu') { closeMenu(); return; }
+  if (mode!=='home') { exitGame(); return; }
+  openMenu();
 });
-
-window.addEventListener('scrollUp', function() {});
-window.addEventListener('scrollDown', function() {});
+window.addEventListener('scrollUp', function() {
+  if (statsOpen) return;
+  if (mode==='menu')  { menuIdx=(menuIdx+1)%MENU_ITEMS.length; return; }
+  if (mode==='home')  { doTreat();        return; }
+  if (mode==='catch') { catchScrollLeft();return; }
+  if (mode==='fish')  { fishScrollUp();   return; }
+});
+window.addEventListener('scrollDown', function() {
+  if (statsOpen) return;
+  if (mode==='menu')  { menuIdx=(menuIdx-1+MENU_ITEMS.length)%MENU_ITEMS.length; return; }
+  if (mode==='home')  { doCuddle();        return; }
+  if (mode==='catch') { catchScrollRight();return; }
+  if (mode==='fish')  { fishScrollDown();  return; }
+});
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
-  if (e.key === 'ArrowUp')   window.dispatchEvent(new Event('scrollUp'));
-  if (e.key === 'ArrowDown') window.dispatchEvent(new Event('scrollDown'));
-  if (e.key === ' ' && !e.repeat) { e.preventDefault(); doFeed(); }
-  if (e.key === 'Tab') { e.preventDefault(); cycleStagePreview(); }
-  if (e.key === 'r') window.dispatchEvent(new Event('longPressEnd'));
+  if (e.key==='Escape')            { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
+  if (e.key==='ArrowUp')           window.dispatchEvent(new Event('scrollUp'));
+  if (e.key==='ArrowDown')         window.dispatchEvent(new Event('scrollDown'));
+  if (e.key===' '&&!e.repeat)     { e.preventDefault(); if(mode==='menu') confirmMenu(); else if(mode==='home') doFeed(); }
+  if (e.key==='Enter')             { if(mode==='menu') confirmMenu(); }
+  if (e.key==='Tab')               { e.preventDefault(); state.stage=(state.stage+1)%5; saveState(); }
+  if (e.key==='r')                 window.dispatchEvent(new Event('longPressEnd'));
 });
-
-// ── Stage preview cycle (desktop only) ──────
-function cycleStagePreview() {
-  state.stage = (state.stage + 1) % 5;
-  saveState();
-}
-
-
-// Tap canvas to feed
-var canvas = document.getElementById('main-canvas');
 canvas.addEventListener('pointerup', function(e) {
   e.preventDefault();
   if (statsOpen) { closeStats(); return; }
-  doFeed();
+  if (mode==='menu') { confirmMenu(); return; }
+  if (mode==='home') doFeed();
 });
-
-// Tap stats panel to close
 document.getElementById('stats-panel').addEventListener('pointerup', function(e) {
-  e.preventDefault();
-  closeStats();
+  e.preventDefault(); closeStats();
 });
 
-// ─── UI UPDATES ───────────────────────────────────────────────────────────────
-function updateUI() {
-  document.getElementById('hunger-fill').style.width  = Math.round(state.hunger) + '%';
-  document.getElementById('happy-fill').style.width   = Math.round(state.happiness) + '%';
-  document.getElementById('stage-lbl').textContent    = STAGE_NAMES[state.stage];
-}
-
-// ─── DRAWING ──────────────────────────────────────────────────────────────────
-var ctx = canvas.getContext('2d');
-
-function getEyeVariant(mood) {
-  // Returns 'normal' | 'sleeping' | 'hungry' | 'playing' | 'dead'
-  if (blinkState.blinking) return 'sleeping';
-  switch (mood) {
-    case 'sleeping':   return 'sleeping';
-    case 'hungry':
-    case 'very_hungry':return 'hungry';
-    case 'playing':    return 'playing';
-    default:           return 'normal';
-  }
-}
-
-function drawSprite(cx, cy, stage, eyeVariant, scale) {
-  scale = scale || 1;
-  var sprite   = SPRITES[stage];
-  var pxSize   = PIXEL_SIZES[stage] * scale;
-  var rows     = sprite.length;
-  var cols     = sprite[0].length;
-  var drawW    = cols * pxSize;
-  var drawH    = rows * pxSize;
-  var startX   = cx - drawW / 2;
-  var startY   = cy - drawH / 2;
-
-  // Find eye positions in base sprite (value === 3)
-  var eyeCells = [];
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      if (sprite[r][c] === 3) eyeCells.push({r:r, c:c});
+// shake
+(function(){
+  var lx=0,ly=0,lz=0,last=0;
+  window.addEventListener('devicemotion',function(e){
+    var a=e.accelerationIncludingGravity||e.acceleration; if(!a) return;
+    var dx=(a.x||0)-lx, dy=(a.y||0)-ly, dz=(a.z||0)-lz;
+    lx=a.x||0; ly=a.y||0; lz=a.z||0;
+    var now=Date.now();
+    if (Math.sqrt(dx*dx+dy*dy+dz*dz)>12 && now-last>1000 && mode==='home' && state.stage>0) {
+      last=now;
+      state.happiness=Math.min(100,state.happiness+10);
+      triggerAnim('play',500);
+      say(pick(['wheee!','dizzy~','woah!']));
+      saveState(); updateUI();
     }
-  }
-
-  for (var row = 0; row < rows; row++) {
-    for (var col = 0; col < cols; col++) {
-      var cell = sprite[row][col];
-      if (cell === 0) continue;
-
-      var px = startX + col * pxSize;
-      var py = startY + row * pxSize;
-      var isEye = (cell === 3);
-
-      if (isEye) {
-        drawEyeCell(ctx, px, py, pxSize, eyeVariant, row, col, sprite, eyeCells);
-      } else {
-        ctx.fillStyle = (cell === 1) ? ORANGE : (cell === 4) ? WHITE : DARK;
-        ctx.fillRect(px, py, pxSize, pxSize);
-      }
-    }
-  }
-}
-
-function drawEyeCell(ctx, px, py, pxSize, variant, row, col, sprite, eyeCells) {
-  // First fill with orange (background of eye area)
-  ctx.fillStyle = ORANGE;
-  ctx.fillRect(px, py, pxSize, pxSize);
-
-  var ps = Math.max(1, Math.floor(pxSize));
-
-  switch (variant) {
-    case 'normal':
-      ctx.fillStyle = EYE;
-      ctx.fillRect(px, py, ps, ps);
-      break;
-    case 'sleeping':
-      // Eyes close: slit disappears (orange fill already in place, do nothing)
-      break;
-    case 'hungry':
-      // Slit shifted down slightly
-      ctx.fillStyle = EYE;
-      ctx.fillRect(px, py + Math.max(1, Math.floor(ps * 0.3)), ps, ps);
-      break;
-    case 'playing':
-      // Squint: top portion of slit visible
-      ctx.fillStyle = EYE;
-      ctx.fillRect(px, py, ps, Math.max(1, Math.floor(ps * 0.5)));
-      break;
-    case 'dead':
-      // X eyes: two diagonal lines
-      ctx.fillStyle = EYE;
-      for (var i = 0; i < ps; i++) {
-        ctx.fillRect(px + i, py + i, 1, 1);
-        ctx.fillRect(px + ps - 1 - i, py + i, 1, 1);
-      }
-      break;
-    default:
-      ctx.fillStyle = EYE;
-      ctx.fillRect(px, py, ps, ps);
-  }
-}
-
-function drawEgg(cx, cy, crackPhase, scale) {
-  // crackPhase: 0=no crack, 1=cracking (shake), 2=hatching
-  scale = scale || 1;
-  var sprite = EGG_SPRITE;
-  var pxSize = PIXEL_SIZES[0] * scale;
-  var rows   = sprite.length;
-  var cols   = sprite[0].length;
-  var drawW  = cols * pxSize;
-  var drawH  = rows * pxSize;
-  var startX = cx - drawW / 2;
-  var startY = cy - drawH / 2;
-
-  for (var row = 0; row < rows; row++) {
-    for (var col = 0; col < cols; col++) {
-      var cell = sprite[row][col];
-      if (cell === 0) continue;
-      ctx.fillStyle = (cell === 1) ? ORANGE : DARK;
-      ctx.fillRect(startX + col * pxSize, startY + row * pxSize, pxSize, pxSize);
-    }
-  }
-}
-
-var zzParticles = [];
-
-function spawnZzz(cx, cy) {
-  zzParticles.push({
-    x: cx + (Math.random() - 0.5) * 20,
-    y: cy,
-    life: 1.0,
-    char: Math.random() < 0.5 ? 'Z' : 'z',
-    size: 8 + Math.floor(Math.random() * 5)
   });
+})();
+
+// ── ui ─────────────────────────────────────────────────────────────────────────
+function updateUI() {
+  document.getElementById('hunger-fill').style.width = Math.round(state.hunger)+'%';
+  document.getElementById('happy-fill').style.width  = Math.round(state.happiness)+'%';
+  document.getElementById('stage-lbl').textContent   = STAGE_NAMES[state.stage];
 }
 
-function drawZzz() {
-  ctx.save();
-  for (var i = zzParticles.length - 1; i >= 0; i--) {
-    var p = zzParticles[i];
-    ctx.globalAlpha = p.life * 0.7;
-    ctx.fillStyle = '#aaaaff';
-    ctx.font = 'bold ' + p.size + 'px -apple-system, sans-serif';
-    ctx.fillText(p.char, p.x, p.y);
-    p.y -= 0.4;
-    p.life -= 0.008;
-    if (p.life <= 0) zzParticles.splice(i, 1);
+// ── render loop ────────────────────────────────────────────────────────────────
+var lastTick=0;
+function render(ts) {
+  var now=Date.now();
+  if ((mode==='home'||mode==='menu') && (!lastTick||ts-lastTick>30000)) {
+    applyTimeDecay(); applyStageAdvancement(); saveState(); updateUI(); lastTick=ts;
   }
-  ctx.restore();
-}
+  if (mode==='catch') { catchUpdate(now); catchDraw(now); requestAnimationFrame(render); return; }
+  if (mode==='fish')  { fishUpdate(now);  fishDraw(now);  requestAnimationFrame(render); return; }
 
-// ─── MAIN RENDER LOOP ─────────────────────────────────────────────────────────
-var lastZzzSpawn = 0;
-var lastTick = 0;
+  // home
+  ctx.clearRect(0,0,240,208);
+  var mood=getMood(), cx=120, cy=95, offsetY=0, scale=1, shakeX=0, elapsed=0;
 
-function render(timestamp) {
-  // Decay check every 30s of real time
-  if (!lastTick || timestamp - lastTick > 30000) {
-    applyTimeDecay();
-    applyStageAdvancement();
-    saveState();
-    updateUI();
-    lastTick = timestamp;
+  if (!blinkState.blinking && now>blinkState.nextBlink) {
+    blinkState.blinking=true;
+    setTimeout(function(){ blinkState.blinking=false; scheduleNextBlink(); },150);
   }
+  if (mood==='sleeping'&&anim.type==='idle') anim.type='sleeping';
+  else if (mood!=='sleeping'&&anim.type==='sleeping') { anim.type='idle'; zzParticles=[]; }
 
-  ctx.clearRect(0, 0, 240, 208);
-
-  var mood = getMood();
-  var eyeVariant = getEyeVariant(mood);
-  var now = Date.now();
-
-  // Blink logic
-  if (!blinkState.blinking && now > blinkState.nextBlink) {
-    blinkState.blinking = true;
-    setTimeout(function() {
-      blinkState.blinking = false;
-      scheduleNextBlink();
-    }, 150);
-  }
-
-  // Character center
-  var cx = 120;
-  var cy = 95; // within the 208px canvas
-
-  // Compute transforms
-  var offsetY = 0;
-  var scale = 1;
-  var shakeX = 0;
-  var elapsed = 0;
-
-  // Sync sleeping state before running anim switch
-  if (mood === 'sleeping' && anim.type === 'idle') {
-    anim.type = 'sleeping';
-  } else if (mood !== 'sleeping' && anim.type === 'sleeping') {
-    anim.type = 'idle';
-    zzParticles = [];
-  }
-
-  // Advance timed animations
-  if (anim.type !== 'idle' && anim.type !== 'sleeping') {
-    elapsed = now - anim.startTime;
-    if (elapsed >= anim.duration) {
-      if (anim.fromEgg) anim.fromEgg = false;
-      anim.type = (mood === 'sleeping') ? 'sleeping' : 'idle';
-      elapsed = 0;
+  if (anim.type!=='idle'&&anim.type!=='sleeping') {
+    elapsed=now-anim.startTime;
+    if (elapsed>=anim.duration) {
+      if (anim.fromEgg) anim.fromEgg=false;
+      anim.type=mood==='sleeping'?'sleeping':'idle'; elapsed=0;
     }
   }
-
-  switch (anim.type) {
-    case 'idle': {
-      var t = now / 2000;
-      offsetY = Math.sin(t * Math.PI * 2) * 3;
-      break;
-    }
-    case 'feed': {
-      var progress = elapsed / anim.duration;
-      // scale 1 -> 1.15 -> 1
-      scale = 1 + Math.sin(progress * Math.PI) * 0.15;
-      break;
-    }
+  switch(anim.type){
+    case 'idle':     offsetY=Math.sin((now/2000)*Math.PI*2)*3; break;
+    case 'feed':     scale=1+Math.sin((elapsed/anim.duration)*Math.PI)*0.15; break;
     case 'play': {
-      // Two vertical jumps
-      var p = elapsed / anim.duration;
-      if (p < 0.5) {
-        offsetY = -Math.sin(p / 0.5 * Math.PI) * 15;
-      } else {
-        offsetY = -Math.sin((p - 0.5) / 0.5 * Math.PI) * 10;
+      var p=elapsed/anim.duration;
+      offsetY=p<0.5?-Math.sin(p/0.5*Math.PI)*15:-Math.sin((p-0.5)/0.5*Math.PI)*10; break;
+    }
+    case 'sleeping':
+      offsetY=Math.sin((now/4000)*Math.PI*2);
+      if (now-lastZzzSpawn>1800) {
+        var sh=SPRITES[state.stage].length*PIXEL_SIZES[state.stage];
+        spawnZzz(cx+15,cy-sh/2-5); lastZzzSpawn=now;
       }
       break;
-    }
-    case 'sleeping': {
-      var ts = now / 4000;
-      offsetY = Math.sin(ts * Math.PI * 2) * 1;
-      // Spawn ZZZ periodically
-      if (now - lastZzzSpawn > 1800) {
-        var spriteH = SPRITES[state.stage].length * PIXEL_SIZES[state.stage];
-        spawnZzz(cx + 15, cy - spriteH / 2 - 5);
-        lastZzzSpawn = now;
-      }
-      break;
-    }
     case 'hatch': {
-      var hp = elapsed / anim.duration;
-      shakeX = Math.sin(hp * Math.PI * 8) * 4 * (1 - hp);
-      if (hp > 0.6) {
-        scale = 0.85 + hp * 0.15;
-      }
-      break;
+      var hp=elapsed/anim.duration;
+      shakeX=Math.sin(hp*Math.PI*8)*4*(1-hp);
+      if (hp>0.6) scale=0.85+hp*0.15; break;
     }
   }
 
-  // Draw ZZZ particles when sleeping (single draw call, updated each frame)
-  if (mood === 'sleeping') {
-    drawZzz();
+  // ZZZ
+  if (mood==='sleeping') {
+    ctx.save();
+    for (var zi=zzParticles.length-1;zi>=0;zi--) {
+      var zp=zzParticles[zi];
+      ctx.globalAlpha=zp.life*0.7; ctx.fillStyle='#aaaaff';
+      ctx.font='bold '+zp.size+'px -apple-system,sans-serif';
+      ctx.fillText(zp.char,zp.x,zp.y);
+      zp.y-=0.4; zp.life-=0.008; if(zp.life<=0) zzParticles.splice(zi,1);
+    }
+    ctx.restore();
   }
 
+  // character
   ctx.save();
-  ctx.translate(cx + shakeX, cy + offsetY);
-  if (scale !== 1) ctx.scale(scale, scale);
-  ctx.translate(-cx, -cy);
-
-  if (anim.type === 'hatch' && anim.fromEgg) {
-    // Show egg cracking in first 60% of animation, then reveal baby
-    var hProgress = (anim.duration > 0) ? elapsed / anim.duration : 1;
-    if (hProgress < 0.6) {
-      drawEgg(cx, cy, 1, 1);
-    } else {
-      drawSprite(cx, cy, 1, 'normal', 1);
-    }
-  } else if (state.stage === 0) {
-    drawEgg(cx, cy, 0, 1);
+  ctx.translate(cx+shakeX,cy+offsetY);
+  if (scale!==1) ctx.scale(scale,scale);
+  ctx.translate(-cx,-cy);
+  if (anim.type==='hatch'&&anim.fromEgg) {
+    if (elapsed/anim.duration<0.6) drawEgg(cx,cy);
+    else drawSpriteAt(cx,cy,1,'normal',1);
+  } else if (state.stage===0) {
+    drawEgg(cx,cy);
   } else {
-    drawSprite(cx, cy, state.stage, eyeVariant, 1);
+    var ev = blinkState.blinking?'sleeping':
+      mood==='sleeping'?'sleeping':
+      (mood==='hungry'||mood==='very_hungry')?'hungry':
+      mood==='playing'?'playing':'normal';
+    drawSpriteAt(cx,cy,state.stage,ev,1);
+  }
+  ctx.restore();
+
+  // confetti
+  if (confetti.length) {
+    ctx.save();
+    for (var ci=confetti.length-1;ci>=0;ci--) {
+      var cp=confetti[ci];
+      ctx.globalAlpha=cp.life; ctx.fillStyle=cp.color;
+      ctx.fillRect(cp.x,cp.y,cp.size,cp.size);
+      cp.x+=cp.vx; cp.y+=cp.vy; cp.vy+=0.1; cp.life-=0.02;
+      if(cp.life<=0) confetti.splice(ci,1);
+    }
+    ctx.restore();
   }
 
-  ctx.restore();
+  // idle mood sayings
+  if ((anim.type==='idle'||anim.type==='sleeping') && !bubble.text && now-lastIdleSay>14000) {
+    if (Math.random()<0.004) {
+      var sayMap={
+        happy:['happy~','la la~','(＾▽＾)'],
+        hungry:['feed me...','hungry...'],
+        very_hungry:['starving!','so hungry!'],
+        sleeping:['zzz...','dreaming~'],
+        playing:['yay!','fun!']
+      };
+      say(pick(sayMap[mood]||sayMap.happy),2000); lastIdleSay=now;
+    }
+  }
+
+  // speech bubble
+  var sprH=SPRITES[state.stage].length*PIXEL_SIZES[state.stage];
+  drawBubble(cx, cy+offsetY-sprH/2);
+
+  // menu overlay
+  if (mode==='menu') drawMenu();
 
   requestAnimationFrame(render);
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ── init ───────────────────────────────────────────────────────────────────────
 loadState();
 applyTimeDecay();
 applyStageAdvancement();
-saveState();
-updateUI();
-scheduleNextBlink();
-
-// Start sleeping anim if appropriate
-if (getMood() === 'sleeping') {
-  anim.type = 'sleeping';
-}
-
+saveState(); updateUI(); scheduleNextBlink();
+if (getMood()==='sleeping') anim.type='sleeping';
 requestAnimationFrame(render);
 
 })();

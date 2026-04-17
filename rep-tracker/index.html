@@ -32,11 +32,11 @@ body {
   margin-top: 5px; margin-bottom: 9px;
 }
 .ex-card {
-  width: 218px; height: 86px;
+  width: 218px; height: 68px;
   background: rgba(254,80,0,0.07);
   border: 1px solid rgba(254,80,0,0.45);
-  border-radius: 11px; padding: 11px 13px;
-  margin-bottom: 8px;
+  border-radius: 11px; padding: 7px 13px;
+  margin-bottom: 7px;
   display: flex; flex-direction: column; justify-content: space-between;
   cursor: pointer;
   box-shadow: 0 0 0 1px rgba(254,80,0,0.08) inset;
@@ -102,6 +102,15 @@ body {
     <div class="card-bot" id="ro-bot">tap to log reps</div>
   </div>
 
+  <div class="ex-card" id="card-sq">
+    <div class="card-top">
+      <div class="card-name">Squats</div>
+      <div class="card-num" id="sq-num">0<sub> / 50</sub></div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="sq-bar" style="width:0%"></div></div>
+    <div class="card-bot" id="sq-bot">tap to log reps</div>
+  </div>
+
   <div class="nav-hint">SIDE BUTTON = GRAPH</div>
 </div>
 
@@ -126,7 +135,7 @@ body {
   <div class="graph-legend">
     <div class="leg"><div class="leg-swatch" style="background:#FE5000"></div>Push-ups</div>
     <div class="leg"><div class="leg-swatch" style="background:rgba(254,80,0,0.45)"></div>Rows</div>
-    <div class="leg"><div class="leg-swatch" style="background:rgba(255,255,255,0.28); border:none; background-image: repeating-linear-gradient(90deg,rgba(255,255,255,0.35) 0 4px,transparent 4px 7px)"></div>Target</div>
+    <div class="leg"><div class="leg-swatch" style="background:rgba(255,200,60,0.85)"></div>Squats</div>
   </div>
   <div class="graph-hint">SIDE = NEXT PERIOD · LONG PRESS = BACK</div>
 </div>
@@ -147,12 +156,12 @@ function todayKey() {
 }
 function getTodayRecord() {
   var all = load(), k = todayKey();
-  if (!all[k]) all[k] = {pu:0, ro:0};
+  if (!all[k]) all[k] = {pu:0, ro:0, sq:0};
   return {all, k, rec: all[k]};
 }
 
 /* ─── State ─── */
-var TARGETS = {pu:100, ro:50};
+var TARGETS = {pu:100, ro:50, sq:50};
 var PERIODS = ['WEEKLY','MONTHLY','QUARTERLY','ALL TIME'];
 var pidx = 0;
 var view = 'home';
@@ -167,16 +176,20 @@ function refreshHome() {
   document.getElementById('home-date').textContent =
     DAYS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
   var {rec} = getTodayRecord();
-  var pu = rec.pu||0, ro = rec.ro||0;
+  var pu = rec.pu||0, ro = rec.ro||0, sq = rec.sq||0;
   document.getElementById('pu-num').innerHTML = pu+'<sub> / 100</sub>';
   document.getElementById('ro-num').innerHTML = ro+'<sub> / 50</sub>';
+  document.getElementById('sq-num').innerHTML = sq+'<sub> / 50</sub>';
   document.getElementById('pu-bar').style.width = Math.min(100,(pu/100)*100)+'%';
   document.getElementById('ro-bar').style.width = Math.min(100,(ro/50)*100)+'%';
-  var puDone = pu >= 100, roDone = ro >= 50;
+  document.getElementById('sq-bar').style.width = Math.min(100,(sq/50)*100)+'%';
+  var puDone = pu >= 100, roDone = ro >= 50, sqDone = sq >= 50;
   document.getElementById('card-pu').classList.toggle('done', puDone);
   document.getElementById('card-ro').classList.toggle('done', roDone);
+  document.getElementById('card-sq').classList.toggle('done', sqDone);
   document.getElementById('pu-bot').textContent = puDone ? '✓ daily goal hit!' : 'tap to log reps · '+Math.max(0,100-pu)+' to go';
   document.getElementById('ro-bot').textContent = roDone ? '✓ daily goal hit!' : 'tap to log reps · '+Math.max(0,50-ro)+' to go';
+  document.getElementById('sq-bot').textContent = sqDone ? '✓ daily goal hit!' : 'tap to log reps · '+Math.max(0,50-sq)+' to go';
 }
 
 /* ─── View switching ─── */
@@ -189,8 +202,8 @@ function showView(name) {
 }
 
 /* ─── Add Reps ─── */
-var NAMES = {pu:'Push-ups', ro:'Inverted Rows'};
-var DEFAULTS = {pu:20, ro:10};
+var NAMES = {pu:'Push-ups', ro:'Inverted Rows', sq:'Squats'};
+var DEFAULTS = {pu:20, ro:10, sq:10};
 function startAdd(ex) {
   addEx = ex; pending = DEFAULTS[ex];
   var {rec} = getTodayRecord();
@@ -247,6 +260,7 @@ function drawGraph() {
   var n = dates.length;
   var puVals = dates.map(function(d){ return all[d]?(all[d].pu||0):null; });
   var roVals = dates.map(function(d){ return all[d]?(all[d].ro||0):null; });
+  var sqVals = dates.map(function(d){ return all[d]?(all[d].sq||0):null; });
 
   var pL=30, pR=8, pT=8, pB=22;
   var gW=W-pL-pR, gH=H-pT-pB;
@@ -306,7 +320,7 @@ function drawGraph() {
         grad.addColorStop(0,'rgba(254,80,0,0.95)');
         grad.addColorStop(1,'rgba(254,80,0,0.4)');
         ctx.fillStyle=grad;
-        roundRect(ctx, bx-off-bw/2, pT+gH-bh, bw, bh, 2);
+        roundRect(ctx, bx-off-bw, pT+gH-bh, bw, bh, 2);
         ctx.fill();
       }
       if (roVals[i]!==null && roVals[i]>0) {
@@ -315,7 +329,16 @@ function drawGraph() {
         grad2.addColorStop(0,'rgba(254,80,0,0.52)');
         grad2.addColorStop(1,'rgba(254,80,0,0.18)');
         ctx.fillStyle=grad2;
-        roundRect(ctx, bx+off-bw/2, pT+gH-bh2, bw, bh2, 2);
+        roundRect(ctx, bx-bw/2, pT+gH-bh2, bw, bh2, 2);
+        ctx.fill();
+      }
+      if (sqVals[i]!==null && sqVals[i]>0) {
+        var bh3=(sqVals[i]/maxV)*gH;
+        var grad3=ctx.createLinearGradient(0,yp(sqVals[i]),0,pT+gH);
+        grad3.addColorStop(0,'rgba(255,200,60,0.85)');
+        grad3.addColorStop(1,'rgba(255,200,60,0.3)');
+        ctx.fillStyle=grad3;
+        roundRect(ctx, bx+off-bw/2, pT+gH-bh3, bw, bh3, 2);
         ctx.fill();
       }
     }
@@ -356,6 +379,7 @@ function drawGraph() {
       });
     }
     drawArea(roVals, 'rgba(254,80,0,0.6)', 'rgba(254,80,0,0.10)');
+    drawArea(sqVals, 'rgba(255,200,60,0.85)', 'rgba(255,200,60,0.12)');
     drawArea(puVals, 'rgba(254,80,0,0.95)', 'rgba(254,80,0,0.18)');
   }
 }
@@ -418,8 +442,10 @@ function handleTap(x,y) {
   if (view==='home') {
     var r1=document.getElementById('card-pu').getBoundingClientRect();
     var r2=document.getElementById('card-ro').getBoundingClientRect();
+    var r3=document.getElementById('card-sq').getBoundingClientRect();
     if (x>=r1.left&&x<=r1.right&&y>=r1.top&&y<=r1.bottom) startAdd('pu');
     else if (x>=r2.left&&x<=r2.right&&y>=r2.top&&y<=r2.bottom) startAdd('ro');
+    else if (x>=r3.left&&x<=r3.right&&y>=r3.top&&y<=r3.bottom) startAdd('sq');
   } else if (view==='add') {
     confirmAdd();
   }
