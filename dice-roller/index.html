@@ -13,17 +13,47 @@ body {
   -webkit-user-select: none; user-select: none;
 }
 
-/* ── Header ── */
+/* ── Header tabs ── */
 #hdr {
   height: 30px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: stretch;
   border-bottom: 1px solid #1e1e20;
 }
-#hdr-title {
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 3px; color: #D97706;
-  text-transform: uppercase;
+.tab {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: #3a3a3e; cursor: pointer; text-transform: uppercase;
+  border-right: 1px solid #1e1e20;
+  transition: color 0.15s;
 }
+.tab:last-child { border-right: none; }
+.tab.on { color: #D97706; box-shadow: inset 0 -2px 0 #D97706; }
+
+/* ── HP tracker ── */
+#hp-area {
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 240px; height: 210px;
+}
+#hp-val {
+  font-size: 88px; font-weight: 700; color: #fff;
+  line-height: 1; letter-spacing: -2px;
+  transition: color 0.2s;
+}
+#hp-lbl { font-size: 10px; color: #444; letter-spacing: 3px; margin-top: 8px; }
+
+/* ── Turn order picker ── */
+#turns-area {
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 240px; height: 210px; gap: 6px;
+}
+#turns-count { font-size: 13px; font-weight: 700; color: #D97706; letter-spacing: 1px; }
+#turns-list {
+  font-size: 12px; color: #fff; text-align: center;
+  line-height: 20px; white-space: pre-line;
+}
+#turns-sub { font-size: 9px; color: #3a3a3e; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
 
 /* ── Die selector strip ── */
 #sel {
@@ -73,7 +103,7 @@ body {
   border-top: 1px solid #1e1e20;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 #mode-lbl {
   height: 13px;
@@ -89,7 +119,9 @@ body {
 <body>
 
 <div id="hdr">
-  <span id="hdr-title">Dice Roller</span>
+  <div class="tab on" data-mode="dice">Dice</div>
+  <div class="tab"    data-mode="hp">HP</div>
+  <div class="tab"    data-mode="turns">Turns</div>
 </div>
 
 <div id="sel"></div>
@@ -132,6 +164,15 @@ body {
       dominant-baseline="central"
       letter-spacing="1"></text>
   </svg>
+  <div id="hp-area">
+    <div id="hp-val">20</div>
+    <div id="hp-lbl">HP</div>
+  </div>
+  <div id="turns-area">
+    <div id="turns-count">PLAYERS: 4</div>
+    <div id="turns-list"></div>
+    <div id="turns-sub">scroll · tap to shuffle</div>
+  </div>
 </div>
 
 <div id="ftr">
@@ -141,6 +182,7 @@ body {
 
 <script>
 var DICE = [
+  { sides: 2,  label: 'c2',  n: 40, rot: 0             }, // coin — circle
   { sides: 4,  label: 'd4',  n: 3, rot: -Math.PI / 2  }, // triangle, point up
   { sides: 6,  label: 'd6',  n: 4, rot: -Math.PI / 4  }, // square, flat top
   { sides: 8,  label: 'd8',  n: 4, rot:  0             }, // diamond
@@ -149,7 +191,7 @@ var DICE = [
   { sides: 20, label: 'd20', n: 8, rot: -Math.PI / 8  }, // octagon
 ];
 
-var dieIdx  = 1;   // default d6
+var dieIdx  = 2;   // default d6
 var multi   = 1;   // 1 or 2 dice
 var results = [];
 var rolling = false;
@@ -218,11 +260,27 @@ function render() {
   }
 
   // Result display — use setAttribute, NOT .style, for SVG text on R1 WebView
+  var isCoin = d.sides === 2;
   if (results.length === 0) {
     numEl.setAttribute('font-size', '60');
     numEl.setAttribute('fill', '#2a2a2e');
     numEl.textContent = '?';
     subEl.textContent = '';
+  } else if (isCoin) {
+    if (multi === 1) {
+      numEl.setAttribute('font-size', '72');
+      numEl.setAttribute('fill', '#ffffff');
+      numEl.textContent = results[0] === 1 ? 'H' : 'T';
+      subEl.setAttribute('fill', '#888888');
+      subEl.textContent = results[0] === 1 ? 'HEADS' : 'TAILS';
+    } else {
+      var l1 = results[0] === 1 ? 'H' : 'T', l2 = results[1] === 1 ? 'H' : 'T';
+      numEl.setAttribute('font-size', '60');
+      numEl.setAttribute('fill', '#ffffff');
+      numEl.textContent = l1 + ' ' + l2;
+      subEl.setAttribute('fill', '#888888');
+      subEl.textContent = (results[0]===1?'HEADS':'TAILS') + '  ·  ' + (results[1]===1?'HEADS':'TAILS');
+    }
   } else if (multi === 1) {
     var v = results[0];
     numEl.setAttribute('font-size', v >= 10 ? '54' : '64');
@@ -262,10 +320,19 @@ function doRoll() {
   var step = 0, STEPS = 10;
   if (flashTimer) clearTimeout(flashTimer);
 
+  var isCoin = d.sides === 2;
   function flash() {
     if (step < STEPS) {
       numEl.setAttribute('fill', '#F59E0B');
-      if (count === 1) {
+      if (isCoin) {
+        numEl.setAttribute('font-size', count === 1 ? '72' : '60');
+        if (count === 1) {
+          numEl.textContent = step % 2 === 0 ? 'H' : 'T';
+        } else {
+          numEl.textContent = (step%2===0?'H':'T') + ' ' + (step%2===0?'T':'H');
+        }
+        subEl.textContent = '';
+      } else if (count === 1) {
         var v = rng(d.sides);
         numEl.setAttribute('font-size', v >= 10 ? '54' : '64');
         numEl.textContent = v;
@@ -293,49 +360,130 @@ function doRoll() {
   flash();
 }
 
+// ── App modes ────────────────────────────────────────────────────────────────
+var appMode = 'dice';
+var hpVal = 20;
+var playerCount = 4;
+var turnOrder = [];
+
+function switchMode(m) {
+  appMode = m;
+  var sel  = document.getElementById('sel');
+  var main = document.getElementById('main');
+  var svg  = document.getElementById('die-svg');
+  var hpA  = document.getElementById('hp-area');
+  var trnA = document.getElementById('turns-area');
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('on', t.getAttribute('data-mode') === m);
+  });
+  sel.style.display  = m === 'dice' ? 'flex' : 'none';
+  main.style.height  = m === 'dice' ? '174px' : '210px';
+  svg.style.display  = m === 'dice' ? '' : 'none';
+  hpA.style.display  = m === 'hp'   ? 'flex' : 'none';
+  trnA.style.display = m === 'turns'? 'flex' : 'none';
+  document.getElementById('mode-lbl').textContent = '';
+  if (m === 'dice') {
+    document.getElementById('hint-lbl').textContent = 'shake \u00b7 scroll \u00b7 side btn';
+  } else if (m === 'hp') {
+    renderHP();
+    document.getElementById('hint-lbl').textContent = 'scroll \u00b11  \u00b7  long press reset';
+  } else {
+    renderTurns();
+    document.getElementById('hint-lbl').textContent = 'scroll players  \u00b7  tap shuffle';
+  }
+}
+
+function renderHP() {
+  var el = document.getElementById('hp-val');
+  el.textContent = hpVal;
+  el.style.color = hpVal <= 0 ? '#ef4444' : hpVal <= 5 ? '#f97316' : '#fff';
+}
+
+function renderTurns() {
+  var countEl = document.getElementById('turns-count');
+  var listEl  = document.getElementById('turns-list');
+  var subEl   = document.getElementById('turns-sub');
+  if (turnOrder.length === 0) {
+    countEl.textContent = 'PLAYERS: ' + playerCount;
+    listEl.textContent  = '';
+    subEl.textContent   = 'scroll \u00b7 tap to shuffle';
+  } else {
+    countEl.textContent = playerCount + ' PLAYERS';
+    var ord = ['1st','2nd','3rd','4th','5th','6th','7th','8th'];
+    listEl.textContent = turnOrder.map(function(p, i) {
+      return ord[i] + '  \u2192  Player ' + p;
+    }).join('\n');
+    subEl.textContent = 'tap to re-shuffle';
+  }
+}
+
+function shuffleTurns() {
+  var arr = [];
+  for (var i = 1; i <= playerCount; i++) arr.push(i);
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  turnOrder = arr;
+  renderTurns();
+}
+
 // ── R1 hardware events ───────────────────────────────────────────────────────
 window.addEventListener('scrollUp', function() {
+  if (appMode === 'hp') { hpVal = Math.max(-99, hpVal - 1); renderHP(); return; }
+  if (appMode === 'turns') { playerCount = Math.max(2, playerCount - 1); turnOrder = []; renderTurns(); return; }
   dieIdx = (dieIdx - 1 + DICE.length) % DICE.length;
   results = [];
   render();
 });
 
 window.addEventListener('scrollDown', function() {
+  if (appMode === 'hp') { hpVal = Math.min(999, hpVal + 1); renderHP(); return; }
+  if (appMode === 'turns') { playerCount = Math.min(8, playerCount + 1); turnOrder = []; renderTurns(); return; }
   dieIdx = (dieIdx + 1) % DICE.length;
   results = [];
   render();
 });
 
 window.addEventListener('sideClick', function() {
+  if (appMode === 'hp') { hpVal = 20; renderHP(); return; }
+  if (appMode === 'turns') { shuffleTurns(); return; }
   multi = multi === 1 ? 2 : 1;
   results = [];
   render();
 });
 
 window.addEventListener('longPressStart', function() {
+  if (appMode === 'hp') { hpVal = 20; renderHP(); return; }
+  if (appMode === 'turns') { shuffleTurns(); return; }
   doRoll();
 });
 
-// Tap the die to roll too (touch-friendly backup)
+// Tap to roll (dice) or shuffle (turns)
 document.getElementById('main').addEventListener('pointerdown', function() {
-  doRoll();
+  if (appMode === 'turns') { shuffleTurns(); return; }
+  if (appMode === 'dice') doRoll();
 });
 
 // ── Accelerometer shake detection ────────────────────────────────────────────
-// Mirror the spirit-level pattern exactly: async/await + isAvailable() at 60Hz.
-// Magnitude spike detection: at rest sqrt(x²+y²+z²) ≈ 1.0 (gravity only);
-// a deliberate shake pushes it above ~1.6.
+// 60Hz for faster peak capture. Magnitude at rest ≈ 1.0 (gravity only).
+// Threshold 1.2 (was 1.3) — catches a moderate shake without false positives.
+// Jerk threshold 0.25 (was 0.3) — catches quick direction reversals.
 async function initAccel() {
-  if (typeof window.creationSensors === 'undefined') return;
+  if (typeof window.creationSensors === 'undefined') {
+    initMotion();
+    return;
+  }
   try {
     var available = await window.creationSensors.accelerometer.isAvailable();
-    if (!available) return;
+    if (!available) {
+      document.getElementById('hint-lbl').textContent = 'no sensor · scroll · side btn';
+      return;
+    }
     firstRead = true;
+    var dbg = document.getElementById('dbg');
     window.creationSensors.accelerometer.start(function(data) {
-      // Magnitude spike: at rest ≈ 1.0 (gravity); hard shake pushes above 1.3
       var mag = Math.sqrt(data.x*data.x + data.y*data.y + data.z*data.z);
-
-      // Jerk (rate of change between samples): catches quick direction reversals
       var jmag = 0;
       if (!firstRead) {
         var jx = data.x - px, jy = data.y - py, jz = data.z - pz;
@@ -343,14 +491,17 @@ async function initAccel() {
       }
       px = data.x; py = data.y; pz = data.z;
       firstRead = false;
-
-      if ((mag > 1.3 || jmag > 0.3) && canShake) {
+      // Show live values so we can calibrate the threshold
+      dbg.textContent = 'mag:' + mag.toFixed(2) + ' j:' + jmag.toFixed(3);
+      if (jmag > 0.08 && canShake) {
         canShake = false;
-        doRoll();
+        if (appMode === 'turns') shuffleTurns(); else if (appMode === 'dice') doRoll();
         setTimeout(function() { canShake = true; }, 1000);
       }
-    }, { frequency: 30 });
-  } catch(e) {}
+    }, { frequency: 60 });
+  } catch(e) {
+    document.getElementById('hint-lbl').textContent = 'sensor error · scroll · side btn';
+  }
 }
 
 document.addEventListener('visibilitychange', function() {
@@ -362,6 +513,28 @@ document.addEventListener('visibilitychange', function() {
   }
 });
 
+// ── DeviceMotionEvent fallback (if creationSensors not available) ─────────────
+// accelerationIncludingGravity is in m/s². At rest ≈ 9.8 on z-axis.
+// A hard shake spikes the jerk (delta between samples) well above 5 m/s².
+function initMotion() {
+  var mpx = null, mpy = null, mpz = null;
+  window.addEventListener('devicemotion', function(e) {
+    var a = e.accelerationIncludingGravity;
+    if (!a) return;
+    var x = a.x || 0, y = a.y || 0, z = a.z || 0;
+    if (mpx !== null) {
+      var jx = x - mpx, jy = y - mpy, jz = z - mpz;
+      var jmag = Math.sqrt(jx*jx + jy*jy + jz*jz);
+      if (jmag > 8 && canShake) {
+        canShake = false;
+        if (appMode === 'turns') shuffleTurns(); else if (appMode === 'dice') doRoll();
+        setTimeout(function() { canShake = true; }, 1000);
+      }
+    }
+    mpx = x; mpy = y; mpz = z;
+  });
+}
+
 // ── Keyboard fallbacks for desktop testing ───────────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    window.dispatchEvent(new Event('scrollUp'));
@@ -369,6 +542,14 @@ document.addEventListener('keydown', function(e) {
   if (e.key === ' ')   { e.preventDefault(); doRoll(); }
   if (e.key === 'Enter') doRoll();
   if (e.key === 's')   window.dispatchEvent(new Event('sideClick'));
+});
+
+// Tab click handlers
+document.querySelectorAll('.tab').forEach(function(t) {
+  t.addEventListener('pointerdown', function(e) {
+    e.stopPropagation();
+    switchMode(t.getAttribute('data-mode'));
+  });
 });
 
 render();
