@@ -542,8 +542,7 @@ window.addEventListener('scrollDown', function() {
     return;
   }
   if (currentView === 'day') {
-    var entries = loadEntries(dateStr(selDate));
-    if (dayCursor < entries.length - 1) { dayCursor++; renderDayView(); }
+    if (dayCursor > -1) { dayCursor--; renderDayView(); }
     return;
   }
 });
@@ -558,7 +557,8 @@ window.addEventListener('scrollUp', function() {
     return;
   }
   if (currentView === 'day') {
-    if (dayCursor >= 0) { dayCursor--; renderDayView(); }
+    var entries = loadEntries(dateStr(selDate));
+    if (dayCursor < entries.length - 1) { dayCursor++; renderDayView(); }
     return;
   }
 });
