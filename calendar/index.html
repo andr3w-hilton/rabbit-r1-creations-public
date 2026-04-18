@@ -199,7 +199,7 @@ body {
     <div class="cal-dayname weekend">S</div>
   </div>
   <div id="cal-grid"></div>
-  <div id="cal-hint"><span>scroll · navigate &nbsp;·&nbsp; side · open day</span></div>
+  <div id="cal-hint"><span>scroll · navigate &nbsp;·&nbsp; tap/side · open day</span></div>
 </div>
 
 <!-- Day screen -->
@@ -212,7 +212,7 @@ body {
   <div id="day-content">
     <div id="day-list"></div>
   </div>
-  <div id="day-hint"><span>side · add/edit &nbsp;·&nbsp; hold · voice &nbsp;·&nbsp; long press entry · delete</span></div>
+  <div id="day-hint"><span>tap · add/edit &nbsp;·&nbsp; hold · voice &nbsp;·&nbsp; long press · delete</span></div>
 </div>
 
 <!-- Edit screen -->
@@ -313,6 +313,7 @@ function renderCalendar() {
           viewMonth = new Date(selDate.getFullYear(), selDate.getMonth(), 1);
         }
         renderCalendar();
+        openDayView();
       });
     })(new Date(d));
 
@@ -352,7 +353,7 @@ function renderDayView() {
   var addRow = document.createElement('div');
   addRow.className = 'entry-add-row' + (dayCursor===-1 ? ' selected' : '');
   addRow.innerHTML = '<span class="entry-add-icon">+</span><span class="entry-add-label">NEW ENTRY</span>';
-  addRow.addEventListener('click', function() { dayCursor=-1; renderDayView(); });
+  addRow.addEventListener('click', function() { dayCursor=-1; openEdit(null); });
   list.appendChild(addRow);
 
   entries.forEach(function(entry, idx) {
@@ -376,7 +377,7 @@ function renderDayView() {
           renderCalendar();
         }, 600);
       });
-      row.addEventListener('pointerup',     function() { clearTimeout(pressTimer); if (!longFired) { dayCursor=i; renderDayView(); } });
+      row.addEventListener('pointerup',     function() { clearTimeout(pressTimer); if (!longFired) { dayCursor=i; openEdit(i); } });
       row.addEventListener('pointerleave',  function() { clearTimeout(pressTimer); });
       row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
     })(idx, entry.id);
