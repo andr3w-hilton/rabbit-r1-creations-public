@@ -11,6 +11,7 @@ const APPS = [
   'dice-roller',
   'notes',
   'r1-buddy',
+  'calendar',
   'gemma-chat',
 ];
 
@@ -48,6 +49,18 @@ const SEEDS = {
       { role: 'gemma', content: 'Chilli flakes and a handful of fresh basil at the end make a big difference. Crispy pancetta if you have it.' },
     ])
   },
+  'calendar': (() => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const pad = n => n < 10 ? '0'+n : ''+n;
+    const ds = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+    return {
+      ['r1_cal_'+ds]: JSON.stringify([
+        { id: 'a1', time: '09:00', text: 'Morning standup', created: Date.now() },
+        { id: 'a2', time: '12:30', text: 'Lunch with Sarah', created: Date.now() },
+        { id: 'a3', time: '15:00', text: 'Code review session', created: Date.now() },
+      ])
+    };
+  })(),
   'r1-buddy': {
     // Stage 2 = KID. born = now minus 5 hours (past the 4h kid threshold)
     r1_buddy: JSON.stringify({
