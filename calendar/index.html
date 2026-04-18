@@ -81,7 +81,8 @@ body {
   justify-content: space-between; padding: 0 12px;
   border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
 }
-#day-back { font-size: 8px; color: rgba(254,80,0,0.4); font-weight: 700; letter-spacing: 0.5px; }
+#day-back { font-size: 8px; color: rgba(254,80,0,0.4); font-weight: 700; letter-spacing: 0.5px; cursor: pointer; padding: 4px 0; }
+#day-back:active { color: #FE5000; }
 #day-date { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 0.8px; }
 #day-count { font-size: 8px; color: rgba(254,80,0,0.5); min-width: 44px; text-align: right; }
 
@@ -204,14 +205,14 @@ body {
 <!-- Day screen -->
 <div id="day-screen">
   <div id="day-header">
-    <span id="day-back">⟵ HOLD</span>
+    <span id="day-back">⟵ BACK</span>
     <span id="day-date"></span>
     <span id="day-count"></span>
   </div>
   <div id="day-content">
     <div id="day-list"></div>
   </div>
-  <div id="day-hint"><span>scroll · select &nbsp;·&nbsp; side · open &nbsp;·&nbsp; hold · back</span></div>
+  <div id="day-hint"><span>scroll · select &nbsp;·&nbsp; side · add/edit &nbsp;·&nbsp; hold · voice</span></div>
 </div>
 
 <!-- Edit screen -->
@@ -460,16 +461,18 @@ function deleteEntry() {
 document.getElementById('btn-save').addEventListener('click', saveEntry);
 document.getElementById('btn-cancel').addEventListener('click', closeEdit);
 document.getElementById('btn-del').addEventListener('click', deleteEntry);
+document.getElementById('day-back').addEventListener('pointerdown', function() { closeDayView(); });
 
 // ── Voice ──────────────────────────────────────────────────────────────
+function startListening() {
+  if (isListening) return;
+  isListening = true;
+  document.getElementById('listen-overlay').classList.add('visible');
+  if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('start');
+}
+
 window.addEventListener('longPressStart', function() {
-  if (currentView === 'day') { closeDayView(); return; }
-  if (currentView === 'edit') {
-    if (isListening) return;
-    isListening = true;
-    document.getElementById('listen-overlay').classList.add('visible');
-    if (typeof CreationVoiceHandler !== 'undefined') CreationVoiceHandler.postMessage('start');
-  }
+  if (currentView === 'day' || currentView === 'edit') startListening();
 });
 
 window.addEventListener('longPressEnd', function() {
@@ -484,8 +487,22 @@ window.onPluginMessage = function(data) {
   document.getElementById('listen-overlay').classList.remove('visible');
   var transcript = (data.transcript||'').trim();
   if (!transcript) return;
-  document.getElementById('edit-input').value = transcript;
-  setTimeout(function() { document.getElementById('edit-input').focus(); }, 60);
+
+  if (currentView === 'day') {
+    // Direct add from day view — save with current time, no edit screen
+    var now = new Date();
+    var ds = dateStr(selDate);
+    var entries = loadEntries(ds);
+    entries.push({ id: genId(), time: pad(now.getHours())+':'+pad(now.getMinutes()), text: transcript, created: Date.now() });
+    entries.sort(function(a,b) { return (a.time||'00:00') <= (b.time||'00:00') ? -1 : 1; });
+    saveEntries(ds, entries);
+    renderDayView();
+    renderCalendar();
+  } else if (currentView === 'edit') {
+    // Populate the edit textarea for review before saving
+    document.getElementById('edit-input').value = transcript;
+    setTimeout(function() { document.getElementById('edit-input').focus(); }, 60);
+  }
 };
 
 // ── R1 events ──────────────────────────────────────────────────────────
