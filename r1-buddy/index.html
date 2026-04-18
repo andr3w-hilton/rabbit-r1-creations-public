@@ -19,7 +19,7 @@ body {
   padding: 0 10px;
   border-bottom: 1px solid rgba(254,80,0,0.18);
 }
-#top-bar .name { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #FF6720; }
+#top-bar .name { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #FE5000; }
 #top-bar .stage-lbl { font-size: 9px; font-weight: 600; letter-spacing: 1px; color: rgba(255,255,255,0.35); }
 #main-canvas { position: absolute; top: 24px; left: 0; display: block; }
 #bottom-bar {
@@ -333,9 +333,10 @@ function resetPet() {
 }
 
 // ── mode & menu ────────────────────────────────────────────────────────────────
-var mode = 'home'; // home | menu | catch | fish
+var mode = 'home'; // home | menu | confirm | catch | fish
 var MENU_ITEMS = ['CATCH GAME','FISHING','RESET PET'];
 var menuIdx = 0;
+var confirmIdx = 0; // 0=NO 1=YES
 
 function openMenu()  { mode='menu'; menuIdx=0; updateHint(); }
 function closeMenu() { mode='home'; updateHint(); }
@@ -344,14 +345,19 @@ function confirmMenu() {
   var sel = MENU_ITEMS[menuIdx]; closeMenu();
   if (sel==='CATCH GAME') catchStart();
   else if (sel==='FISHING') fishStart();
-  else if (sel==='RESET PET') resetPet();
+  else if (sel==='RESET PET') { mode='confirm'; confirmIdx=0; updateHint(); }
+}
+function confirmReset() {
+  if (confirmIdx===1) { resetPet(); }
+  mode='home'; updateHint();
 }
 function updateHint() {
   var hints = {
-    home:  'tap feed · scroll treat/cuddle · hold=menu',
-    menu:  'scroll select · tap ok · side close',
-    catch: 'scroll ↑← ↓→ to catch  ·  side exit',
-    fish:  '↑ cast · ↓ reel on bite  ·  side exit'
+    home:    'tap feed · scroll treat/cuddle · hold=menu',
+    menu:    'scroll select · tap ok · side close',
+    confirm: 'scroll YES/NO · tap ok · side cancel',
+    catch:   'scroll ↑← ↓→ to catch  ·  side exit',
+    fish:    '↑ cast · ↓ reel on bite  ·  side exit'
   };
   document.getElementById('hint').textContent = hints[mode] || hints.home;
 }
@@ -379,6 +385,33 @@ function drawMenu() {
   ctx.fillStyle = 'rgba(255,255,255,0.18)';
   ctx.font = '8px -apple-system,sans-serif';
   ctx.fillText('scroll to pick  ·  tap to go', 120, 182);
+  ctx.textAlign = 'left';
+}
+
+function drawConfirm() {
+  ctx.fillStyle = 'rgba(14,14,16,0.96)';
+  ctx.fillRect(0,0,240,208);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff4444';
+  ctx.font = 'bold 10px -apple-system,sans-serif';
+  ctx.fillText('RESET PET?', 120, 58);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '9px -apple-system,sans-serif';
+  ctx.fillText('all progress will be lost', 120, 76);
+  var opts = ['NO','YES'];
+  for (var i=0; i<opts.length; i++) {
+    var iy = 108+i*34, sel = i===confirmIdx;
+    if (sel) {
+      ctx.fillStyle = i===1 ? 'rgba(255,68,68,0.18)' : 'rgba(255,103,32,0.13)';
+      ctx.fillRect(60, iy-16, 120, 24);
+      ctx.strokeStyle = i===1 ? 'rgba(255,68,68,0.6)' : 'rgba(255,103,32,0.45)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(60, iy-16, 120, 24);
+    }
+    ctx.fillStyle = sel ? (i===1 ? '#ff4444' : ORANGE) : 'rgba(255,255,255,0.35)';
+    ctx.font = 'bold 13px -apple-system,sans-serif';
+    ctx.fillText(opts[i], 120, iy);
+  }
   ctx.textAlign = 'left';
 }
 
@@ -674,6 +707,7 @@ var lastSide=0;
 window.addEventListener('sideClick', function() {
   if (statsOpen) { closeStats(); return; }
   if (mode==='menu') { closeMenu(); return; }
+  if (mode==='confirm') { mode='home'; updateHint(); return; }
   if (mode!=='home') { exitGame(); return; }
   var now=Date.now();
   if (now-lastSide<400) { openStats(); lastSide=0; }
@@ -687,6 +721,7 @@ window.addEventListener('longPressEnd', function() {
 });
 window.addEventListener('scrollUp', function() {
   if (statsOpen) return;
+  if (mode==='confirm') { confirmIdx=(confirmIdx+1)%2; return; }
   if (mode==='menu')  { menuIdx=(menuIdx+1)%MENU_ITEMS.length; return; }
   if (mode==='home')  { doTreat();        return; }
   if (mode==='catch') { catchScrollLeft();return; }
@@ -694,6 +729,7 @@ window.addEventListener('scrollUp', function() {
 });
 window.addEventListener('scrollDown', function() {
   if (statsOpen) return;
+  if (mode==='confirm') { confirmIdx=(confirmIdx+1)%2; return; }
   if (mode==='menu')  { menuIdx=(menuIdx-1+MENU_ITEMS.length)%MENU_ITEMS.length; return; }
   if (mode==='home')  { doCuddle();        return; }
   if (mode==='catch') { catchScrollRight();return; }
@@ -704,14 +740,15 @@ document.addEventListener('keydown', function(e) {
   if (e.key==='Escape')            { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
   if (e.key==='ArrowUp')           window.dispatchEvent(new Event('scrollUp'));
   if (e.key==='ArrowDown')         window.dispatchEvent(new Event('scrollDown'));
-  if (e.key===' '&&!e.repeat)     { e.preventDefault(); if(mode==='menu') confirmMenu(); else if(mode==='home') doFeed(); }
-  if (e.key==='Enter')             { if(mode==='menu') confirmMenu(); }
+  if (e.key===' '&&!e.repeat)     { e.preventDefault(); if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); else if(mode==='home') doFeed(); }
+  if (e.key==='Enter')             { if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); }
   if (e.key==='Tab')               { e.preventDefault(); state.stage=(state.stage+1)%5; saveState(); }
   if (e.key==='r')                 window.dispatchEvent(new Event('longPressEnd'));
 });
 canvas.addEventListener('pointerup', function(e) {
   e.preventDefault();
   if (statsOpen) { closeStats(); return; }
+  if (mode==='confirm') { confirmReset(); return; }
   if (mode==='menu') { confirmMenu(); return; }
   if (mode==='home') doFeed();
 });
@@ -748,7 +785,7 @@ function updateUI() {
 var lastTick=0;
 function render(ts) {
   var now=Date.now();
-  if ((mode==='home'||mode==='menu') && (!lastTick||ts-lastTick>30000)) {
+  if ((mode==='home'||mode==='menu'||mode==='confirm') && (!lastTick||ts-lastTick>30000)) {
     applyTimeDecay(); applyStageAdvancement(); saveState(); updateUI(); lastTick=ts;
   }
   if (mode==='catch') { catchUpdate(now); catchDraw(now); requestAnimationFrame(render); return; }
@@ -856,8 +893,9 @@ function render(ts) {
   var sprH=SPRITES[state.stage].length*PIXEL_SIZES[state.stage];
   drawBubble(cx, cy+offsetY-sprH/2);
 
-  // menu overlay
+  // menu / confirm overlays
   if (mode==='menu') drawMenu();
+  if (mode==='confirm') drawConfirm();
 
   requestAnimationFrame(render);
 }
