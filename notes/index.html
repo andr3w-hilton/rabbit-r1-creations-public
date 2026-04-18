@@ -33,7 +33,8 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.05);
   min-height: 54px;
 }
-.note-row.pressing { background: rgba(254,80,0,0.08); }
+.note-row.pressing  { background: rgba(254,80,0,0.08); }
+.note-row.selected  { background: rgba(254,80,0,0.08); border-left: 2px solid rgba(254,80,0,0.5); padding-left: 10px; }
 .note-title { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
 .note-preview { font-size: 10px; color: rgba(255,255,255,0.32); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
 .note-meta { font-size: 8px; color: rgba(255,255,255,0.16); }
@@ -192,6 +193,7 @@ var notes = loadNotes();
 // ── State ─────────────────────────────────────────────────────────────
 var scrollOffset = 0;
 var editingId    = null;
+var selectedId   = null;
 var isListening  = false;
 
 var ROW_H      = 54;
@@ -249,7 +251,7 @@ function render() {
 
   notes.forEach(function(note) {
     var row = document.createElement('div');
-    row.className = 'note-row';
+    row.className = 'note-row' + (note.id === selectedId ? ' selected' : '');
     row.dataset.id = note.id;
     row.innerHTML =
       '<div class="note-title">' + esc(noteTitle(note.text)) + '</div>' +
@@ -275,7 +277,7 @@ function updateScrollbar() {
 
 // ── Row touch events ──────────────────────────────────────────────────
 function attachRowEvents(row, id) {
-  var pressTimer = null, longFired = false, lastTap = 0, singleTimer = null;
+  var pressTimer = null, longFired = false;
 
   row.addEventListener('pointerdown', function() {
     row.classList.add('pressing');
@@ -291,15 +293,12 @@ function attachRowEvents(row, id) {
     row.classList.remove('pressing');
     clearTimeout(pressTimer);
     if (longFired) return;
-    var now = Date.now();
-    if (now - lastTap < 320) {
-      clearTimeout(singleTimer);
-      lastTap = 0;
+    if (selectedId === id) {
       openEdit(id);
-      return;
+    } else {
+      selectedId = id;
+      render();
     }
-    lastTap = now;
-    singleTimer = setTimeout(function() { lastTap = 0; }, 320);
   });
 
   row.addEventListener('pointerleave',  function() { row.classList.remove('pressing'); clearTimeout(pressTimer); });
@@ -334,6 +333,7 @@ function closeEdit() {
   $editInput.blur();
   $editScreen.classList.remove('visible');
   editingId = null;
+  selectedId = null;
 }
 
 function saveNote() {
