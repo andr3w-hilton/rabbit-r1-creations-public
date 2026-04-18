@@ -27,7 +27,7 @@ Also includes a [tips & tricks doc](R1_CREATION_TIPS.md) — a running log of ev
 | 🫧 **spirit-level** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/spirit-level/install.html) | Bubble level using the native 60Hz accelerometer | Side click = calibrate · Long press = reset calibration |
 | 🎲 **dice-roller** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/dice-roller/install.html) | Shake to roll — d4 through d20, single or double dice | Shake = roll · Scroll = change die · Side click = toggle single/double dice |
 | 📝 **notes** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/notes/install.html) | Voice or keyboard notes, review before saving, QR export | Side click = new note · Hold = voice note · Double tap = edit · Long press = delete · QR button = export note |
-| 🐣 **r1-buddy** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/r1-buddy/install.html) | Tamagotchi-style pixel-art companion | Tap = feed · Side click = play · Double tap = stats · Long press = sleep |
+| 🐣 **r1-buddy** | [Install QR](https://andr3w-hilton.github.io/rabbit-r1-creations-public/r1-buddy/install.html) | Tamagotchi-style pixel-art companion with catch & fishing mini-games | Tap = feed · Scroll ↑ = treat · Scroll ↓ = cuddle · Side = play · Side×2 = stats · Hold = menu (games / reset) · Shake = excite |
 | 🤖 **gemma-chat** | — requires own backend | AI chat powered by Gemma 4 | Hold = speak · Side click = new chat · Scroll = navigate · Tap mute pill = mute TTS |
 
 ---
