@@ -106,30 +106,38 @@ window.onPluginMessage = function(data) {
 - Call `textarea.focus()` after making it visible — keyboard opens automatically
 - `textarea.blur()` on close — keyboard dismisses
 
-### Double-tap to edit pattern
+### Select-then-open pattern (preferred)
+
+First tap selects/highlights the item; second tap on the already-selected item opens it. Feels more intentional than double-tap and gives the user visible feedback between actions.
 
 ```javascript
-el.addEventListener('pointerdown', function() {
-  pressTimer = setTimeout(function() { pressTimer = null; }, 600);
-});
-el.addEventListener('pointerup', function() {
+var selectedId = null; // track which item is selected
+
+// CSS for the selected state
+// .item.selected { background: rgba(254,80,0,0.08); border-left: 2px solid rgba(254,80,0,0.5); }
+
+row.addEventListener('pointerup', function() {
   clearTimeout(pressTimer);
-  var now = Date.now();
-  if (now - lastTap < 320) {
-    lastTap = 0;
-    openEdit(); // double-tap detected
-    return;
+  if (longFired) return;
+  if (selectedId === id) {
+    openEdit(id);       // second tap on selected item → open
+  } else {
+    selectedId = id;    // first tap → select
+    render();           // re-render to show highlight
   }
-  lastTap = now;
 });
-el.addEventListener('pointerleave',  function() { clearTimeout(pressTimer); });
-el.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
+
+// Clear selection when closing edit or switching views
+function closeEdit() {
+  selectedId = null;
+  // ... rest of close logic
+}
 ```
 
-### Long-press to delete pattern (combined with double-tap)
+### Long-press to delete pattern (combined with select-then-open)
 
 ```javascript
-var pressTimer = null, longFired = false, lastTap = 0, singleTimer = null;
+var pressTimer = null, longFired = false;
 
 row.addEventListener('pointerdown', function(e) {
   if (e.target.closest('.checkbox')) return;
@@ -143,16 +151,15 @@ row.addEventListener('pointerup', function(e) {
   if (e.target.closest('.checkbox')) return;
   clearTimeout(pressTimer);
   if (longFired) return;
-  var now = Date.now();
-  if (now - lastTap < 320) {
-    clearTimeout(singleTimer);
-    lastTap = 0;
-    editItem(row.dataset.id);
-    return;
+  if (selectedId === row.dataset.id) {
+    openEdit(row.dataset.id);
+  } else {
+    selectedId = row.dataset.id;
+    render();
   }
-  lastTap = now;
-  singleTimer = setTimeout(function() { lastTap = 0; }, 320);
 });
+row.addEventListener('pointerleave',  function() { clearTimeout(pressTimer); });
+row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
 ```
 
 ### Edit screen HTML template
