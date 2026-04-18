@@ -369,6 +369,83 @@
     opacity: 0.8;
   }
 
+  /* ── BYOB section ── */
+  .byob-section {
+    padding-bottom: 64px;
+  }
+
+  .byob-card {
+    display: flex;
+    gap: 28px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.1s;
+  }
+
+  .byob-screenshot {
+    width: 120px;
+    flex-shrink: 0;
+    background: var(--bg3);
+    overflow: hidden;
+  }
+
+  .byob-screenshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+
+  .byob-body {
+    padding: 24px 24px 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .byob-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .byob-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .byob-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .byob-note code {
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+
+  .byob-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .byob-card { flex-direction: column; }
+    .byob-screenshot { width: 100%; height: 140px; }
+    .byob-body { padding: 16px; }
+  }
+
   /* ── Tips banner ── */
   .tips-banner {
     margin-bottom: 96px;
@@ -678,6 +755,23 @@
 
       <div class="card">
         <div class="card-screenshot">
+          <img src="screenshots/calendar.png" alt="Calendar" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-name">Calendar</div>
+          <div class="card-desc">Monthly calendar with daily entries — voice or keyboard input</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Voice · Calendar</span>
+          <a class="card-install" href="calendar/install.html">
+            Install
+            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-screenshot">
           <img src="screenshots/r1-buddy.png" alt="R1 Buddy" loading="lazy">
         </div>
         <div class="card-body">
@@ -693,23 +787,26 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-screenshot">
-          <img src="screenshots/gemma-chat.png" alt="R1 Chat" loading="lazy">
-        </div>
-        <div class="card-body">
-          <div class="card-name">R1 Chat</div>
-          <div class="card-desc">AI chat — bring your own backend and model</div>
-        </div>
-        <div class="card-footer">
-          <span class="card-tag">AI · Voice</span>
-          <a class="card-install" href="gemma-chat/install.html">
-            Install
-            <svg viewBox="0 0 10 10"><path d="M5 1v6M2 5l3 3 3-3M1 9h8"/></svg>
-          </a>
+    </div>
+  </section>
+
+  <section class="byob-section">
+    <div class="section-header">
+      <span class="section-title">Bring Your Own Backend</span>
+    </div>
+    <div class="byob-card">
+      <div class="byob-screenshot">
+        <img src="screenshots/gemma-chat.png" alt="R1 Chat" loading="lazy">
+      </div>
+      <div class="byob-body">
+        <div class="byob-name">🤖 Gemma Chat</div>
+        <div class="byob-desc">AI chat powered by Gemma 4 — hold to speak, side click for new chat, scroll to navigate, tap mute pill to mute TTS.</div>
+        <div class="byob-note">Not hosted here — requires a backend server to proxy requests to an LLM. Clone the repo and follow the setup in <code>gemma-chat/web-server.py</code>. Works with any Google AI Studio key (Gemma) or OpenAI-compatible endpoint.</div>
+        <div class="byob-actions">
+          <a class="link-pill link-pill-primary" href="https://github.com/andr3w-hilton/rabbit-r1-creations-public/tree/master/gemma-chat">View on GitHub</a>
+          <a class="link-pill link-pill-secondary" href="README.md#bring-your-own-backend">Setup Guide</a>
         </div>
       </div>
-
     </div>
   </section>
 
