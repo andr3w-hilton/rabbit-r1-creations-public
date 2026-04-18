@@ -212,7 +212,7 @@ body {
   <div id="day-content">
     <div id="day-list"></div>
   </div>
-  <div id="day-hint"><span>scroll · select &nbsp;·&nbsp; side · add/edit &nbsp;·&nbsp; hold · voice</span></div>
+  <div id="day-hint"><span>side · add/edit &nbsp;·&nbsp; hold · voice &nbsp;·&nbsp; long press entry · delete</span></div>
 </div>
 
 <!-- Edit screen -->
@@ -362,9 +362,24 @@ function renderDayView() {
     row.innerHTML =
       (tl ? '<div class="entry-time">'+esc(tl)+'</div>' : '') +
       '<div class="entry-text-line">'+esc((entry.text||'').split('\n')[0])+'</div>';
-    ;(function(i) {
-      row.addEventListener('click', function() { dayCursor=i; renderDayView(); });
-    })(idx);
+    ;(function(i, eid) {
+      var pressTimer = null, longFired = false;
+      row.addEventListener('pointerdown', function() {
+        longFired = false;
+        pressTimer = setTimeout(function() {
+          longFired = true;
+          var ds = dateStr(selDate);
+          var es = loadEntries(ds).filter(function(e) { return e.id !== eid; });
+          saveEntries(ds, es);
+          dayCursor = -1;
+          renderDayView();
+          renderCalendar();
+        }, 600);
+      });
+      row.addEventListener('pointerup',     function() { clearTimeout(pressTimer); if (!longFired) { dayCursor=i; renderDayView(); } });
+      row.addEventListener('pointerleave',  function() { clearTimeout(pressTimer); });
+      row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
+    })(idx, entry.id);
     list.appendChild(row);
   });
 
@@ -516,9 +531,8 @@ window.addEventListener('sideClick', function() {
 });
 
 window.addEventListener('scrollDown', function() {
-  // Natural: scroll forward = next day (calendar) / next entry (day)
   if (currentView === 'calendar') {
-    selDate = addDays(selDate, 1);
+    selDate = addDays(selDate, -1);
     if (selDate.getMonth()!==viewMonth.getMonth()||selDate.getFullYear()!==viewMonth.getFullYear()) {
       viewMonth = new Date(selDate.getFullYear(), selDate.getMonth(), 1);
     }
@@ -533,9 +547,8 @@ window.addEventListener('scrollDown', function() {
 });
 
 window.addEventListener('scrollUp', function() {
-  // Natural: scroll back = previous day (calendar) / previous entry (day)
   if (currentView === 'calendar') {
-    selDate = addDays(selDate, -1);
+    selDate = addDays(selDate, 1);
     if (selDate.getMonth()!==viewMonth.getMonth()||selDate.getFullYear()!==viewMonth.getFullYear()) {
       viewMonth = new Date(selDate.getFullYear(), selDate.getMonth(), 1);
     }
