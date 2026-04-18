@@ -47,7 +47,8 @@ body {
 #list { position: absolute; top: 0; left: 0; right: 0; transition: transform 0.12s ease; }
 
 .item { display: flex; align-items: center; padding: 0 12px 0 10px; height: 32px; gap: 10px; }
-.item.checked { opacity: 0.4; }
+.item.checked   { opacity: 0.4; }
+.item.selected  { background: rgba(254,80,0,0.08); border-left: 2px solid rgba(254,80,0,0.5); padding-left: 8px; }
 
 .checkbox {
   width: 18px; height: 18px; border: 2px solid #FE5000; border-radius: 3px;
@@ -141,6 +142,7 @@ var LISTS = [
 
 var currentList = 0;
 var scrollOffset = 0;
+var selectedId  = null;
 var isListening = false;
 
 // ── Storage ──────────────────────────────────────────────────────────────
@@ -201,7 +203,7 @@ function render() {
   for (var i = 0; i < items.length; i++) {
     var item = items[i];
     var div = document.createElement('div');
-    div.className = 'item' + (item.checked ? ' checked' : '');
+    div.className = 'item' + (item.checked ? ' checked' : '') + (item.id === selectedId ? ' selected' : '');
     div.dataset.id = item.id;
     var cb = document.createElement('div');
     cb.className = 'checkbox'; cb.dataset.id = item.id;
@@ -222,8 +224,6 @@ function render() {
   list.querySelectorAll('.item').forEach(function(row) {
     var pressTimer = null;
     var longFired = false;
-    var lastTap = 0;
-    var singleTimer = null;
 
     row.addEventListener('pointerdown', function(e) {
       if (e.target.closest('.checkbox')) return;
@@ -238,15 +238,12 @@ function render() {
       if (e.target.closest('.checkbox')) return;
       clearTimeout(pressTimer);
       if (longFired) return;
-      var now = Date.now();
-      if (now - lastTap < 320) {
-        clearTimeout(singleTimer);
-        lastTap = 0;
+      if (selectedId === row.dataset.id) {
         editItem(row.dataset.id);
-        return;
+      } else {
+        selectedId = row.dataset.id;
+        render();
       }
-      lastTap = now;
-      singleTimer = setTimeout(function() { lastTap = 0; }, 320);
     });
 
     row.addEventListener('pointerleave', function() { clearTimeout(pressTimer); });
@@ -295,6 +292,7 @@ function editItem(id) {
 
 function closeEdit() {
   editingId = null;
+  selectedId = null;
   $editScreen.classList.remove('visible');
   $editInput.blur();
 }
@@ -373,6 +371,7 @@ function addItem(text) {
 function cycleList() {
   currentList = (currentList + 1) % LISTS.length;
   scrollOffset = 0;
+  selectedId = null;
   render();
   setStatus(LISTS[currentList].label, 'cycling');
   resetStatus();
