@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tips & Tricks — Rabbit R1 Creations</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #141416;
+    --bg3: #1a1a1d;
+    --accent: #FE5000;
+    --accent-dim: rgba(254,80,0,0.15);
+    --border: rgba(255,255,255,0.07);
+    --text: #ffffff;
+    --text-secondary: rgba(255,255,255,0.45);
+    --text-dim: rgba(255,255,255,0.2);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.018;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    background: rgba(14,14,16,0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  nav .inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo-mark {
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .nav-logo-mark svg { width: 13px; height: 13px; fill: #fff; }
+
+  .nav-logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text);
+  }
+
+  .nav-links { display: flex; gap: 24px; list-style: none; }
+  .nav-links a {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── Page header ── */
+  .page-header {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 64px 24px 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  .page-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  /* ── Content ── */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Markdown styles ── */
+  .md h1 { display: none; } /* title shown in page-header */
+
+  .md h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 56px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .md h2:first-of-type { margin-top: 0; }
+
+  .md h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 28px 0 10px;
+  }
+
+  .md h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 20px 0 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .md p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 14px;
+  }
+
+  .md a { color: var(--accent); text-decoration: none; }
+  .md a:hover { text-decoration: underline; }
+
+  .md ul, .md ol {
+    margin: 0 0 14px 0;
+    padding-left: 20px;
+  }
+
+  .md li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 5px;
+  }
+
+  .md li strong { color: var(--text); }
+
+  .md strong { color: var(--text); font-weight: 600; }
+  .md em { color: var(--text-secondary); font-style: italic; }
+
+  .md hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* Inline code */
+  .md code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 12px;
+    background: rgba(254,80,0,0.1);
+    color: #ff8c55;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(254,80,0,0.18);
+  }
+
+  /* Code blocks */
+  .md pre {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    position: relative;
+  }
+
+  .md pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: rgba(255,255,255,0.82);
+    font-size: 12.5px;
+    line-height: 1.65;
+    border-radius: 0;
+  }
+
+  /* Tables */
+  .md table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 13px;
+  }
+
+  .md th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(254,80,0,0.25);
+  }
+
+  .md td {
+    padding: 9px 12px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  .md td code { font-size: 11px; }
+
+  .md tr:last-child td { border-bottom: none; }
+
+  .md blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 10px 16px;
+    margin: 12px 0 20px;
+    background: var(--accent-dim);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .md blockquote p { margin: 0; color: rgba(255,255,255,0.6); font-size: 13px; }
+
+  /* Loading state */
+  #loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 0;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(254,80,0,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+  }
+
+  footer .inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-left { font-size: 12px; color: var(--text-dim); }
+
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  @media (max-width: 640px) {
+    nav .nav-links { display: none; }
+    .md pre { padding: 14px 16px; border-radius: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 12 12"><rect x="1" y="1" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/><rect x="1" y="7" width="4" height="4" rx="1"/><rect x="7" y="7" width="4" height="4" rx="1"/></svg>
+      </div>
+      <span class="nav-logo-text">R1 Creations</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Apps</a></li>
+      <li><a href="tips.html" style="color:#fff">Tips &amp; Tricks</a></li>
+      <li><a href="https://github.com/andr3w-hilton/rabbit-r1-creations-public">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-eyebrow">Dev Reference</div>
+  <h1 class="page-title">Tips &amp; Tricks</h1>
+  <p class="page-sub">Hard-won knowledge from building R1 creations — voice input, keyboard handling, accelerometer, storage, scroll, and more.</p>
+</div>
+
+<div class="content">
+  <div id="loading"><div class="spinner"></div>Loading…</div>
+  <div id="md-content" class="md" style="display:none"></div>
+</div>
+
+<footer>
+  <div class="inner">
+    <div class="footer-left">Plain HTML. No build step. Self-host and scan.</div>
+    <div class="footer-links">
+      <a href="index.html">Apps</a>
+      <a href="https://github.com/andr3w-hilton/rabbit-r1-creations-public">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  fetch('R1_CREATION_TIPS.md')
+    .then(function(r) { return r.text(); })
+    .then(function(md) {
+      document.getElementById('loading').style.display = 'none';
+      var el = document.getElementById('md-content');
+      el.innerHTML = marked.parse(md);
+      el.style.display = '';
+    })
+    .catch(function() {
+      document.getElementById('loading').innerHTML = 'Failed to load tips. <a href="R1_CREATION_TIPS.md" style="color:var(--accent)">View raw file</a>';
+    });
+</script>
+
+</body>
+</html>
