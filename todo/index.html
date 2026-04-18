@@ -218,15 +218,16 @@ function render() {
 
   list.querySelectorAll('.checkbox').forEach(function(cb) {
     cb.addEventListener('click', function(e) { e.stopPropagation(); toggleItem(cb.dataset.id); });
-    cb.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); toggleItem(cb.dataset.id); });
   });
 
   list.querySelectorAll('.item').forEach(function(row) {
     var pressTimer = null;
     var longFired = false;
+    var captured = false;
 
     row.addEventListener('pointerdown', function(e) {
-      if (e.target.closest('.checkbox')) return;
+      if (e.target.closest('.checkbox')) { captured = false; return; }
+      captured = true;
       longFired = false;
       pressTimer = setTimeout(function() {
         longFired = true;
@@ -235,7 +236,8 @@ function render() {
     });
 
     row.addEventListener('pointerup', function(e) {
-      if (e.target.closest('.checkbox')) return;
+      if (!captured) return;
+      captured = false;
       clearTimeout(pressTimer);
       if (longFired) return;
       if (selectedId === row.dataset.id) {
@@ -246,8 +248,8 @@ function render() {
       }
     });
 
-    row.addEventListener('pointerleave', function() { clearTimeout(pressTimer); });
-    row.addEventListener('pointercancel', function() { clearTimeout(pressTimer); });
+    row.addEventListener('pointerleave', function() { captured = false; clearTimeout(pressTimer); });
+    row.addEventListener('pointercancel', function() { captured = false; clearTimeout(pressTimer); });
   });
 }
 
