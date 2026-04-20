@@ -34,26 +34,33 @@ body {
 .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
 #hunger-fill { background: #FF6720; }
 #happy-fill  { background: rgba(255,255,255,0.55); }
+@keyframes critFlash { 0%,100%{opacity:1} 50%{opacity:0.25} }
+.bar-fill.critical { animation: critFlash 0.7s ease-in-out infinite; background: #ff2020 !important; }
 #hint { font-size: 8px; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.5px; margin-top: 1px; }
 #stats-panel {
   position: absolute; top: 0; right: -240px; width: 240px; height: 282px;
   background: rgba(14,14,16,0.97);
   display: flex; flex-direction: column;
-  padding: 28px 18px 18px; gap: 0;
+  padding: 20px 18px 12px; gap: 0;
   transition: right 0.25s cubic-bezier(0.22,1,0.36,1);
   border-left: 1px solid rgba(254,80,0,0.3);
   z-index: 10;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 #stats-panel.open { right: 0; }
 #stats-panel .sp-title { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
 #stats-panel .sp-val   { font-size: 14px; font-weight: 700; color: #FF6720; letter-spacing: 1px; margin-bottom: 2px; }
-#stats-panel .sp-sub   { font-size: 10px; color: rgba(255,255,255,0.45); margin-bottom: 14px; }
-#stats-panel .sp-divider { height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 14px; }
-#stats-panel .sp-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 6px; margin-bottom: 14px; }
+#stats-panel .sp-sub   { font-size: 10px; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+#stats-panel .sp-divider { height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 8px; }
+#stats-panel .sp-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 6px; margin-bottom: 8px; }
 #stats-panel .sp-stat-item { display: flex; flex-direction: column; gap: 2px; }
 #stats-panel .sp-stat-label { font-size: 8px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); }
-#stats-panel .sp-stat-val   { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-#stats-panel .sp-controls { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+#stats-panel .sp-stat-val   { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+#stats-panel .sp-ctrl-header { display: flex; align-items: center; gap: 5px; font-size: 8px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); cursor: pointer; margin-bottom: 6px; user-select: none; }
+#stats-panel .sp-ctrl-header .sp-ctrl-arrow { font-size: 7px; transition: transform 0.2s; display: inline-block; }
+#stats-panel .sp-ctrl-header.open .sp-ctrl-arrow { transform: rotate(90deg); }
+#stats-panel .sp-controls { display: none; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+#stats-panel .sp-controls.open { display: flex; }
 #stats-panel .sp-ctrl-row  { display: flex; align-items: center; gap: 8px; font-size: 9px; color: rgba(255,255,255,0.3); }
 #stats-panel .sp-ctrl-key  { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.55); min-width: 56px; }
 #stats-panel .sp-close { margin-top: auto; font-size: 9px; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 1px; }
@@ -91,18 +98,31 @@ body {
     <div class="sp-stat-item"><div class="sp-stat-label">JOY</div><div class="sp-stat-val" id="sp-joy-val">—</div></div>
     <div class="sp-stat-item"><div class="sp-stat-label">MOOD</div><div class="sp-stat-val" id="sp-mood-val">—</div></div>
     <div class="sp-stat-item"><div class="sp-stat-label">NEXT</div><div class="sp-stat-val" id="sp-next-val">—</div></div>
+    <div class="sp-stat-item"><div class="sp-stat-label">STREAK</div><div class="sp-stat-val" id="sp-streak-val">—</div></div>
+    <div class="sp-stat-item"><div class="sp-stat-label">MESS</div><div class="sp-stat-val" id="sp-poops-val">—</div></div>
   </div>
   <div class="sp-divider"></div>
-  <div class="sp-controls">
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">TAP</span>feed +25 hunger</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑</span>treat +hunger +joy</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↓</span>cuddle +joy</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE</span>play +20 joy</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE×2</span>open stats</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">HOLD</span>open menu</div>
-    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SHAKE</span>excite +10 joy</div>
+  <div class="sp-ctrl-header" id="sp-ctrl-header">
+    <span class="sp-ctrl-arrow">▶</span>CONTROLS
   </div>
-  <div class="sp-divider"></div>
+  <div class="sp-controls" id="sp-controls">
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">TAP</span>treat · +10 hunger +15 joy (3/day)</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑</span>feed · +25 hunger</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↓</span>cuddle · +12 joy</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE</span>play · +20 joy</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE ×2</span>open stats</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE HOLD</span>open menu</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SHAKE</span>excite · +10 joy</div>
+    <div class="sp-ctrl-row" style="margin-top:6px;color:rgba(255,255,255,0.18);font-size:8px;letter-spacing:1px">CATCH GAME</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑/↓</span>move basket left / right</div>
+    <div class="sp-ctrl-row" style="margin-top:4px;color:rgba(255,255,255,0.18);font-size:8px;letter-spacing:1px">FISHING</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑/↓</span>raise / lower hook</div>
+    <div class="sp-ctrl-row" style="margin-top:4px;color:rgba(255,255,255,0.18);font-size:8px;letter-spacing:1px">MEMORY</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SCROLL ↑/↓</span>input up / down</div>
+    <div class="sp-ctrl-row" style="margin-top:4px;color:rgba(255,255,255,0.18);font-size:8px;letter-spacing:1px">ALL GAMES</div>
+    <div class="sp-ctrl-row"><span class="sp-ctrl-key">SIDE / HOLD</span>exit to menu</div>
+  </div>
+  <div class="sp-divider" id="sp-ctrl-divider" style="display:none"></div>
   <div class="sp-close">tap or esc to close</div>
 </div>
 
@@ -110,7 +130,6 @@ body {
 (function(){
 'use strict';
 
-// ── constants ──────────────────────────────────────────────────────────────────
 var ORANGE = '#FF6720';
 var DARK   = 'rgba(0,0,0,0.4)';
 var EYE    = '#1a0800';
@@ -119,7 +138,6 @@ var WHITE  = '#ffffff';
 var STAGE_NAMES      = ['EGG','BABY','KID','ADULT','ELDER'];
 var STAGE_THRESHOLDS = [0, 10*60*1000, 5*24*3600*1000, 15*24*3600*1000, 30*24*3600*1000];
 
-// ── sprites ────────────────────────────────────────────────────────────────────
 var EGG_SPRITE = [
   [0,0,0,1,1,1,1,1,1,0,0,0],
   [0,0,1,1,1,1,1,1,1,1,0,0],
@@ -163,19 +181,30 @@ var ELDER_SPRITE = [
 var SPRITES     = [EGG_SPRITE, KID_SPRITE, KID_SPRITE, KID_SPRITE, ELDER_SPRITE];
 var PIXEL_SIZES = [7, 5, 7, 9, 9];
 
-// ── pet state ──────────────────────────────────────────────────────────────────
-var state = { born:0, lastSeen:0, hunger:80, happiness:80, stage:0 };
+// ── state ──────────────────────────────────────────────────────────────────────
+var state = {
+  born:0, lastSeen:0, hunger:80, happiness:80, stage:0,
+  poops:0, lastPoop:0, sick:false,
+  streak:0, lastCareDate:'', lastEventDate:'',
+  treatsToday:0, lastTreatDate:''
+};
 
 function loadState() {
   try {
     var raw = localStorage.getItem('r1_buddy');
     if (raw) {
       var p = JSON.parse(raw);
-      state.born      = p.born      || Date.now();
-      state.lastSeen  = p.lastSeen  || Date.now();
-      state.hunger    = typeof p.hunger    === 'number' ? p.hunger    : 80;
-      state.happiness = typeof p.happiness === 'number' ? p.happiness : 80;
-      state.stage     = typeof p.stage     === 'number' ? p.stage     : 0;
+      state.born          = p.born          || Date.now();
+      state.lastSeen      = p.lastSeen      || Date.now();
+      state.hunger        = typeof p.hunger        === 'number' ? p.hunger        : 80;
+      state.happiness     = typeof p.happiness     === 'number' ? p.happiness     : 80;
+      state.stage         = typeof p.stage         === 'number' ? p.stage         : 0;
+      state.poops         = typeof p.poops         === 'number' ? p.poops         : 0;
+      state.lastPoop      = typeof p.lastPoop      === 'number' ? p.lastPoop      : 0;
+      state.sick          = !!p.sick;
+      state.streak        = typeof p.streak        === 'number' ? p.streak        : 0;
+      state.lastCareDate  = typeof p.lastCareDate  === 'string' ? p.lastCareDate  : '';
+      state.lastEventDate = typeof p.lastEventDate === 'string' ? p.lastEventDate : '';
     } else {
       state.born = state.lastSeen = Date.now();
       saveState();
@@ -187,17 +216,41 @@ function saveState() {
     localStorage.setItem('r1_buddy', JSON.stringify({
       born: state.born, lastSeen: Date.now(),
       hunger: Math.round(state.hunger), happiness: Math.round(state.happiness),
-      stage: state.stage
+      stage: state.stage, poops: state.poops, lastPoop: state.lastPoop,
+      sick: state.sick, streak: state.streak,
+      lastCareDate: state.lastCareDate, lastEventDate: state.lastEventDate
     }));
   } catch(e) {}
 }
 function applyTimeDecay() {
   var now = Date.now(), mins = (now - state.lastSeen) / 60000;
   if (mins > 0) {
-    state.hunger    = Math.max(0, state.hunger    - mins / 20);
-    state.happiness = Math.max(0, state.happiness - mins / 30);
+    if (state.sick) {
+      state.hunger    = Math.max(0, state.hunger    - mins / 10);
+      state.happiness = Math.max(0, state.happiness - mins / 15);
+    } else {
+      state.hunger    = Math.max(0, state.hunger    - mins / 20);
+      state.happiness = Math.max(0, state.happiness - mins / 30);
+    }
+    if (state.poops > 0) {
+      state.happiness = Math.max(0, state.happiness - state.poops * mins / 60);
+    }
+    if (!state.sick && (state.hunger <= 0 || state.happiness <= 0)) {
+      state.sick = true;
+      say('i feel sick...', 3000);
+    }
+    checkPoopSpawn(mins);
   }
   state.lastSeen = now;
+}
+function checkPoopSpawn(mins) {
+  if (state.stage === 0 || state.poops >= 3) return;
+  var h = new Date().getHours();
+  if (h < 7 || h >= 22) return;
+  if (Math.random() < Math.min(1, mins / 180)) {
+    state.poops++;
+    say(pick(['eww...', 'oops~', '...']));
+  }
 }
 function applyStageAdvancement() {
   var age = Date.now() - state.born, newStage = 0;
@@ -211,7 +264,29 @@ function applyStageAdvancement() {
     else        { say('i grew up!', 2500); spawnConfetti(120, 95); }
   }
 }
+function checkRareEvent() {
+  if (state.stage === 0 || state.sick) return;
+  var today = new Date().toISOString().slice(0, 10);
+  if (state.lastEventDate === today) return;
+  if (Math.random() < 0.001) {
+    var events = ['found a star! ★', 'saw a butterfly~', 'had a dream!', 'found a coin! ♪', 'rainbow! ♡'];
+    say(pick(events), 3000);
+    state.happiness     = Math.min(100, state.happiness + 15);
+    state.lastEventDate = today;
+    spawnConfetti(120, 95);
+    saveState(); updateUI();
+  }
+}
+function updateStreak() {
+  if (state.stage === 0) return;
+  var today = new Date().toISOString().slice(0, 10);
+  if (state.lastCareDate === today) return;
+  var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  state.streak = (state.lastCareDate === yesterday) ? state.streak + 1 : 1;
+  state.lastCareDate = today;
+}
 function getMood() {
+  if (state.sick) return 'sick';
   var h = new Date().getHours();
   if (h >= 22 || h < 7)    return 'sleeping';
   if (anim.type === 'play') return 'playing';
@@ -220,7 +295,7 @@ function getMood() {
   return 'happy';
 }
 
-// ── animation state ────────────────────────────────────────────────────────────
+// ── animation ──────────────────────────────────────────────────────────────────
 var anim = { type:'idle', startTime:0, duration:0, fromEgg:false };
 var blinkState = { blinking:false, nextBlink:0 };
 
@@ -229,9 +304,9 @@ function triggerAnim(type, dur) { anim.type=type; anim.startTime=Date.now(); ani
 function triggerHatch() { anim.type='hatch'; anim.startTime=Date.now(); anim.duration=800; anim.fromEgg=true; }
 
 // ── particles ──────────────────────────────────────────────────────────────────
-var zzParticles  = [], lastZzzSpawn = 0;
-var confetti     = [];
-var sparkles     = [];
+var zzParticles = [], lastZzzSpawn = 0;
+var confetti    = [];
+var sparkles    = [];
 
 function spawnZzz(cx, ty) {
   zzParticles.push({ x:cx+(Math.random()-0.5)*20, y:ty, life:1.0,
@@ -248,6 +323,15 @@ function spawnSparkle(x, y) {
   for (var i=0; i<8; i++) {
     var a=(Math.PI*2*i)/8;
     sparkles.push({ x:x, y:y, vx:Math.cos(a)*2.2, vy:Math.sin(a)*2.2, life:1.0 });
+  }
+}
+var FIREWORK_COLORS = ['#FFD700','#FF6B35','#FF3399','#00CFFF','#AAFF44','#FFFFFF'];
+var fireworks = [];
+function spawnFirework(x, y) {
+  for (var i=0; i<32; i++) {
+    var a=Math.random()*Math.PI*2, sp=1.5+Math.random()*4;
+    fireworks.push({ x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.2,
+      life:1.0, color:FIREWORK_COLORS[Math.floor(Math.random()*FIREWORK_COLORS.length)] });
   }
 }
 
@@ -292,63 +376,96 @@ function rrect(x, y, w, h, r) {
   ctx.closePath();
 }
 
-// ── home actions ───────────────────────────────────────────────────────────────
+// ── actions ────────────────────────────────────────────────────────────────────
 function doFeed() {
+  var now=Date.now(); if (now-lastHomeAction<HOME_COOLDOWN) return; lastHomeAction=now;
   if (state.stage===0) return;
   var bonus = getMood()==='sleeping' ? 0.5 : 1;
   state.hunger = Math.min(100, state.hunger+25*bonus);
   if (getMood()==='very_hungry') state.happiness = Math.min(100, state.happiness+10);
   say(state.hunger>=95 ? pick(['so full!','stuffed~']) : pick(['nom nom!','yum!','so good!']));
-  triggerAnim('feed', 300); saveState(); updateUI();
+  triggerAnim('feed', 300); updateStreak(); saveState(); updateUI();
 }
 function doPlay() {
-  if (state.stage===0) return;
+  if (state.stage===0 || state.sick) { if(state.sick) say('too sick~'); return; }
   var bonus = getMood()==='sleeping' ? 0.5 : 1;
   state.happiness = Math.min(100, state.happiness+20*bonus);
   state.hunger    = Math.max(0,   state.hunger-5);
   say(pick(['wheee!','yay!','fun!']));
-  triggerAnim('play', 600); saveState(); updateUI();
+  triggerAnim('play', 600); updateStreak(); saveState(); updateUI();
 }
 function doTreat() {
+  var now=Date.now(); if (now-lastHomeAction<HOME_COOLDOWN) return; lastHomeAction=now;
   if (state.stage===0) return;
+  var today = new Date().toDateString();
+  if (state.lastTreatDate !== today) { state.treatsToday=0; state.lastTreatDate=today; }
+  if (state.treatsToday >= 3) { say('no more treats!'); return; }
+  state.treatsToday++;
   var bonus = getMood()==='sleeping' ? 0.5 : 1;
   state.hunger    = Math.min(100, state.hunger+10*bonus);
   state.happiness = Math.min(100, state.happiness+15*bonus);
-  say(pick(['yum! ★','treat!','so tasty!']));
-  triggerAnim('feed', 400); saveState(); updateUI();
+  var left = 3 - state.treatsToday;
+  say(left > 0 ? pick(['yum! ★','treat!','so tasty!']) : 'last treat!');
+  triggerAnim('feed', 400); updateStreak(); saveState(); updateUI();
 }
 function doCuddle() {
+  var now=Date.now(); if (now-lastHomeAction<HOME_COOLDOWN) return; lastHomeAction=now;
   if (state.stage===0) return;
   var bonus = getMood()==='sleeping' ? 0.3 : 1;
   state.happiness = Math.min(100, state.happiness+12*bonus);
   say(pick(['♥','purr~','nice~']));
-  triggerAnim('play', 300); saveState(); updateUI();
+  triggerAnim('play', 300); updateStreak(); saveState(); updateUI();
+}
+function doClean() {
+  if (!state.poops) { say('nothing to clean!'); return; }
+  state.poops = 0; state.lastPoop = Date.now();
+  say(pick(['squeaky clean!','fresh!','thanks~']));
+  triggerAnim('play', 400); saveState(); updateUI();
+}
+function doMedicine() {
+  if (!state.sick) return;
+  state.sick = false;
+  state.hunger    = Math.max(state.hunger,    40);
+  state.happiness = Math.max(state.happiness, 40);
+  say(pick(['all better!','feeling good!','thanks!']));
+  spawnConfetti(120, 95); saveState(); updateUI();
 }
 function resetPet() {
   state.born = state.lastSeen = Date.now();
   state.hunger = state.happiness = 80; state.stage = 0;
+  state.poops = 0; state.lastPoop = 0; state.sick = false;
+  state.streak = 0; state.lastCareDate = ''; state.lastEventDate = '';
   anim.type = 'idle'; anim.fromEgg = false;
-  zzParticles=[]; confetti=[]; sparkles=[]; bubble.text='';
+  zzParticles=[]; confetti=[]; sparkles=[]; fireworks=[]; bubble.text='';
   saveState(); updateUI();
 }
 
-// ── mode & menu ────────────────────────────────────────────────────────────────
-var mode = 'home'; // home | menu | confirm | catch | fish
-var MENU_ITEMS = ['CATCH GAME','FISHING','RESET PET'];
+// ── menu ───────────────────────────────────────────────────────────────────────
+var mode = 'home';
 var menuIdx = 0;
-var confirmIdx = 0; // 0=NO 1=YES
+var confirmIdx = 0;
 
+function getMenuItems() {
+  var items = ['CATCH GAME', 'FISHING', 'MEMORY'];
+  if (state.poops > 0) items.push('CLEAN UP (' + state.poops + ')');
+  if (state.sick)      items.push('MEDICINE');
+  items.push('RESET PET');
+  return items;
+}
 function openMenu()  { mode='menu'; menuIdx=0; updateHint(); }
 function closeMenu() { mode='home'; updateHint(); }
-function exitGame()  { mode='home'; updateHint(); }
+function exitGame()  { openMenu(); }
 function confirmMenu() {
-  var sel = MENU_ITEMS[menuIdx]; closeMenu();
-  if (sel==='CATCH GAME') catchStart();
-  else if (sel==='FISHING') fishStart();
-  else if (sel==='RESET PET') { mode='confirm'; confirmIdx=0; updateHint(); }
+  var items = getMenuItems(), sel = items[menuIdx]; closeMenu();
+  if      (sel==='CATCH GAME')              catchStart();
+  else if (sel==='FISHING')                 fishStart();
+  else if (sel==='MEMORY')                  memoryStart();
+  else if (sel && sel.indexOf('CLEAN')=== 0) doClean();
+  else if (sel==='MEDICINE')                doMedicine();
+  else if (sel==='RESET PET')               { mode='confirm'; confirmIdx=0; updateHint(); }
 }
 function confirmReset() {
-  if (confirmIdx===1) { resetPet(); }
+  if (confirmIdx===1) resetPet();
   mode='home'; updateHint();
 }
 function updateHint() {
@@ -357,46 +474,45 @@ function updateHint() {
     menu:    'scroll select · tap ok · side close',
     confirm: 'scroll YES/NO · tap ok · side cancel',
     catch:   'scroll ↑← ↓→ to catch  ·  side exit',
-    fish:    '↑ cast · ↓ reel on bite  ·  side exit'
+    fish:    'scroll ↑↓ to move hook  ·  side exit',
+    memory:  '↑↓ repeat the sequence  ·  side exit'
   };
   document.getElementById('hint').textContent = hints[mode] || hints.home;
 }
 
 function drawMenu() {
-  ctx.fillStyle = 'rgba(14,14,16,0.93)';
-  ctx.fillRect(0,0,240,208);
+  var items = getMenuItems();
+  menuIdx = Math.min(menuIdx, items.length-1);
+  ctx.fillStyle = 'rgba(14,14,16,0.93)'; ctx.fillRect(0,0,240,208);
   ctx.fillStyle = 'rgba(255,103,32,0.5)';
   ctx.font = 'bold 8px -apple-system,sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('MENU', 120, 52);
-  for (var i=0; i<MENU_ITEMS.length; i++) {
-    var iy = 82+i*30, sel = i===menuIdx;
+  ctx.fillText('MENU', 120, 44);
+  var spacing = items.length > 4 ? 24 : 28;
+  var startY  = items.length > 4 ? 62 : 68;
+  for (var i=0; i<items.length; i++) {
+    var iy = startY+i*spacing, sel = i===menuIdx;
     if (sel) {
       ctx.fillStyle = 'rgba(255,103,32,0.13)';
       ctx.fillRect(30, iy-14, 180, 22);
-      ctx.strokeStyle = 'rgba(255,103,32,0.45)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,103,32,0.45)'; ctx.lineWidth = 1;
       ctx.strokeRect(30, iy-14, 180, 22);
     }
     ctx.fillStyle = sel ? ORANGE : 'rgba(255,255,255,0.45)';
-    ctx.font = 'bold 11px -apple-system,sans-serif';
-    ctx.fillText(MENU_ITEMS[i], 120, iy);
+    ctx.font = 'bold 10px -apple-system,sans-serif';
+    ctx.fillText(items[i], 120, iy);
   }
   ctx.fillStyle = 'rgba(255,255,255,0.18)';
   ctx.font = '8px -apple-system,sans-serif';
-  ctx.fillText('scroll to pick  ·  tap to go', 120, 182);
+  ctx.fillText('scroll to pick  ·  tap to go', 120, 196);
   ctx.textAlign = 'left';
 }
-
 function drawConfirm() {
-  ctx.fillStyle = 'rgba(14,14,16,0.96)';
-  ctx.fillRect(0,0,240,208);
+  ctx.fillStyle = 'rgba(14,14,16,0.96)'; ctx.fillRect(0,0,240,208);
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#ff4444';
-  ctx.font = 'bold 10px -apple-system,sans-serif';
+  ctx.fillStyle = '#ff4444'; ctx.font = 'bold 10px -apple-system,sans-serif';
   ctx.fillText('RESET PET?', 120, 58);
-  ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.font = '9px -apple-system,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = '9px -apple-system,sans-serif';
   ctx.fillText('all progress will be lost', 120, 76);
   var opts = ['NO','YES'];
   for (var i=0; i<opts.length; i++) {
@@ -405,8 +521,7 @@ function drawConfirm() {
       ctx.fillStyle = i===1 ? 'rgba(255,68,68,0.18)' : 'rgba(255,103,32,0.13)';
       ctx.fillRect(60, iy-16, 120, 24);
       ctx.strokeStyle = i===1 ? 'rgba(255,68,68,0.6)' : 'rgba(255,103,32,0.45)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(60, iy-16, 120, 24);
+      ctx.lineWidth = 1; ctx.strokeRect(60, iy-16, 120, 24);
     }
     ctx.fillStyle = sel ? (i===1 ? '#ff4444' : ORANGE) : 'rgba(255,255,255,0.35)';
     ctx.font = 'bold 13px -apple-system,sans-serif';
@@ -427,14 +542,13 @@ var T_GOLD   = { color:'#FFD700', size:4, star:true  };
 
 function catchStart() {
   if (state.stage===0) return;
-  CG.bx=120; CG.treats=[]; CG.missed=0; CG.caught=0; CG.done=false;
-  CG.spawnInterval=1400;
-  CG.startTime = CG.spawnNext = Date.now();
+  if (state.sick) { say('too sick~'); return; }
+  CG.bx=120; CG.treats=[]; CG.missed=0; CG.caught=0; CG.done=false; fireworks=[];
+  CG.spawnInterval=1400; CG.startTime=CG.spawnNext=Date.now();
   mode='catch'; updateHint();
 }
 function catchScrollLeft()  { if (!CG.done) CG.bx = Math.max(22,  CG.bx-24); }
 function catchScrollRight() { if (!CG.done) CG.bx = Math.min(218, CG.bx+24); }
-
 function catchUpdate(now) {
   if (CG.done) { if (now-CG.doneTime>CG.DONE_PAUSE) exitGame(); return; }
   var elapsed = now-CG.startTime;
@@ -445,7 +559,7 @@ function catchUpdate(now) {
     saveState(); updateUI(); return;
   }
   if (now>=CG.spawnNext) {
-    var type = Math.random()<0.18 ? T_GOLD : T_NORMAL;
+    var type = Math.random()<0.08 ? T_GOLD : T_NORMAL;
     CG.treats.push({ x:18+Math.random()*204, y:0, vx:(Math.random()-0.5)*0.6, type:type });
     CG.spawnInterval = Math.max(750, 1400-elapsed/80);
     CG.spawnNext = now+CG.spawnInterval;
@@ -454,18 +568,18 @@ function catchUpdate(now) {
   for (var i=CG.treats.length-1; i>=0; i--) {
     var t=CG.treats[i];
     t.y+=speed; t.x=Math.max(5,Math.min(235,t.x+t.vx));
-    if (t.y>=152 && t.y<=174 && Math.abs(t.x-CG.bx)<22) {
-      CG.caught++; spawnSparkle(t.x,t.y); CG.treats.splice(i,1);
-    } else if (t.y>185) { CG.missed++; CG.treats.splice(i,1); }
+    if (t.y>=146 && t.y<=182 && Math.abs(t.x-CG.bx)<32) {
+      CG.caught++;
+      if (t.type.star) { CG.missed=Math.max(0,CG.missed-1); spawnFirework(t.x,t.y); say('♥ restored!'); }
+      else spawnSparkle(t.x,t.y);
+      CG.treats.splice(i,1);
+    } else if (t.y>188) { CG.missed++; CG.treats.splice(i,1); }
   }
 }
-
 function catchDraw(now) {
   var W=240, H=208, elapsed=now-CG.startTime;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,H);
   ctx.fillStyle='rgba(254,80,0,0.18)'; ctx.fillRect(0,177,W,2);
-
   ctx.font='bold 10px -apple-system,sans-serif';
   ctx.textAlign='left'; ctx.fillStyle=ORANGE;
   ctx.fillText('★ '+CG.caught, 8, 17);
@@ -476,25 +590,26 @@ function catchDraw(now) {
     ctx.fillText('♥', W-8-(CG.MAX_MISS-1-li)*14, 32);
   }
   ctx.textAlign='center';
-
   for (var j=0; j<CG.treats.length; j++) {
     var t=CG.treats[j]; ctx.fillStyle=t.type.color;
-    if (t.type.star) { drawStar5(t.x,t.y,t.type.size); }
-    else { ctx.fillRect(t.x-t.type.size/2, t.y-t.type.size/2, t.type.size, t.type.size); }
+    if (t.type.star) drawStar5(t.x,t.y,t.type.size);
+    else ctx.fillRect(t.x-t.type.size/2, t.y-t.type.size/2, t.type.size, t.type.size);
   }
-
   ctx.save();
   for (var si=sparkles.length-1; si>=0; si--) {
     var sp=sparkles[si];
-    ctx.globalAlpha=sp.life; ctx.fillStyle=ORANGE;
-    ctx.fillRect(sp.x,sp.y,2,2);
+    ctx.globalAlpha=sp.life; ctx.fillStyle=ORANGE; ctx.fillRect(sp.x,sp.y,2,2);
     sp.x+=sp.vx; sp.y+=sp.vy; sp.life-=0.09;
     if (sp.life<=0) sparkles.splice(si,1);
   }
+  for (var fi=fireworks.length-1; fi>=0; fi--) {
+    var fw=fireworks[fi];
+    ctx.globalAlpha=fw.life; ctx.fillStyle=fw.color; ctx.fillRect(fw.x,fw.y,2,2);
+    fw.x+=fw.vx; fw.y+=fw.vy; fw.vy+=0.08; fw.life-=0.03;
+    if (fw.life<=0) fireworks.splice(fi,1);
+  }
   ctx.restore();
-
   if (!CG.done) drawSpriteAt(CG.bx, 163, Math.max(1,state.stage), 'normal', 0.5);
-
   if (CG.done) {
     ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,55,W,90);
     ctx.fillStyle=WHITE; ctx.font='bold 15px -apple-system,sans-serif';
@@ -504,7 +619,6 @@ function catchDraw(now) {
     drawSpriteAt(W/2, 150, Math.max(1,state.stage), 'playing', 0.65);
   }
 }
-
 function drawStar5(x, y, r) {
   ctx.beginPath();
   for (var i=0; i<5; i++) {
@@ -515,132 +629,325 @@ function drawStar5(x, y, r) {
 }
 
 // ── fish game ──────────────────────────────────────────────────────────────────
-var WATER_TOP = 128;
-var FB_X=42, FB_Y=82, LINE_X=58, LINE_Y=90, LINE_MAX=90;
+// ── fish game (real-time) ──────────────────────────────────────────────────────
+var FW_TOP  = 92;   // water surface Y
+var FL_X    = 68;   // line / hook X (rod tip)
+var FL_YTIP = 80;   // rod tip Y (overhangs pier edge)
+var FH_MIN  = 72;   // hook min Y (just below pier deck)
+var FH_MAX  = 196;
 
 var FG = {
-  st:'idle', lineP:0, castP:0, reelP:0, bobPhase:0,
-  waitEnd:0, nibbleEnd:0, result:null, resultEnd:0,
-  fishX:LINE_X, score:0,
-  NIBBLE_WIN:1500, RESULT_PAUSE:2000
+  st: 'fishing',   // fishing | hooked | result
+  hookY: 140,
+  fish: [],
+  spawnNext: 0,
+  hookedFish: null,
+  reelStart: 0,
+  REEL_DUR: 1400,
+  score: 0,
+  result: null,
+  resultEnd: 0,
+  RESULT_PAUSE: 1100
 };
 
 function fishStart() {
   if (state.stage===0) return;
-  FG.st='idle'; FG.lineP=0; FG.castP=0; FG.reelP=0;
-  FG.result=null; FG.score=0;
+  if (state.sick) { say('too sick~'); return; }
+  FG.st='fishing'; FG.hookY=140; FG.fish=[]; FG.score=0;
+  FG.hookedFish=null; FG.result=null; FG.spawnNext=Date.now()+600;
   mode='fish'; updateHint();
 }
-function fishScrollUp() {
-  if (FG.st==='idle') { FG.st='casting'; FG.castP=0; }
-}
-function fishScrollDown() {
-  if (FG.st==='nibble') { FG.st='reeling'; FG.reelP=0; }
-  else if (FG.st==='waiting') {
-    FG.st='result'; FG.result='missed'; FG.resultEnd=Date.now()+FG.RESULT_PAUSE;
+function fishScrollUp()   { if (FG.st!=='result') FG.hookY=Math.max(FH_MIN,FG.hookY-16); }
+function fishScrollDown() { if (FG.st!=='result') FG.hookY=Math.min(FH_MAX,FG.hookY+16); }
+
+function fishUpdate(now) {
+  if (FG.st==='hooked') {
+    // player reels by scrolling hook above water
+    if (FG.hookY <= FW_TOP - 6) {
+      FG.score++;
+      state.hunger    = Math.min(100, state.hunger+8);
+      state.happiness = Math.min(100, state.happiness+6);
+      saveState(); updateUI();
+      FG.hookedFish = { x: FL_X, y: FG.hookY };
+      FG.st='result'; FG.result='caught'; FG.resultEnd=now+FG.RESULT_PAUSE;
+    }
+    return;
+  }
+  if (FG.st==='result') {
+    if (now>=FG.resultEnd) { FG.st='fishing'; FG.result=null; FG.hookedFish=null; }
+    return;
+  }
+  // spawn fish
+  if (FG.fish.length < 3 && now>=FG.spawnNext) {
+    FG.fish.push({
+      x: 248,
+      y: FW_TOP+12 + Math.random()*(FH_MAX-FW_TOP-24),
+      vx: -(0.7 + Math.random()*1.6),
+      wobble: Math.random()*Math.PI*2
+    });
+    FG.spawnNext = now + 1800 + Math.random()*2800;
+  }
+  // move fish & check catch
+  for (var i=FG.fish.length-1; i>=0; i--) {
+    var f=FG.fish[i];
+    f.x += f.vx;
+    f.wobble += 0.04;
+    f.y += Math.sin(f.wobble)*0.18;
+    if (Math.abs(f.x-FL_X)<16 && Math.abs(f.y-FG.hookY)<11) {
+      FG.hookedFish={x:f.x, y:f.y};
+      FG.fish.splice(i,1);
+      FG.st='hooked'; FG.reelStart=now;
+      spawnSparkle(FL_X, FG.hookY);
+      say(pick(['got one!','fish on!','yes!!']));
+      break;
+    }
+    if (f.x < -20) FG.fish.splice(i,1);
   }
 }
 
-function fishUpdate(now) {
-  switch(FG.st) {
-    case 'casting':
-      FG.castP=Math.min(1,FG.castP+0.04); FG.lineP=FG.castP;
-      if (FG.castP>=1) {
-        FG.st='waiting'; FG.bobPhase=0;
-        FG.waitEnd=now+2000+Math.random()*4000;
-        FG.fishX=LINE_X+(Math.random()-0.5)*16;
-      }
-      break;
-    case 'waiting':
-      FG.bobPhase+=0.04;
-      if (now>=FG.waitEnd) { FG.st='nibble'; FG.bobPhase=0; FG.nibbleEnd=now+FG.NIBBLE_WIN; }
-      break;
-    case 'nibble':
-      FG.bobPhase+=0.22;
-      if (now>=FG.nibbleEnd) { FG.st='result'; FG.result='missed'; FG.resultEnd=now+FG.RESULT_PAUSE; }
-      break;
-    case 'reeling':
-      FG.reelP=Math.min(1,FG.reelP+0.055); FG.lineP=1-FG.reelP;
-      if (FG.reelP>=1) {
-        FG.st='result'; FG.result='caught'; FG.resultEnd=now+FG.RESULT_PAUSE; FG.score++;
-        state.hunger    = Math.min(100, state.hunger+7);
-        state.happiness = Math.min(100, state.happiness+5);
-        saveState(); updateUI();
-      }
-      break;
-    case 'result':
-      if (now>=FG.resultEnd) { FG.st='idle'; FG.lineP=0; FG.castP=0; FG.reelP=0; FG.result=null; }
-      break;
-  }
+function drawPier() {
+  // posts going into water
+  ctx.fillStyle='#4a2810';
+  ctx.fillRect(13,72,7,30);
+  ctx.fillRect(53,72,7,30);
+  // deck planks
+  ctx.fillStyle='#8b5e2e';
+  ctx.fillRect(0,63,78,9);
+  // plank grain lines
+  ctx.fillStyle='#7a5228';
+  for (var px=8; px<78; px+=11) ctx.fillRect(px,63,1,9);
+  // deck top highlight
+  ctx.fillStyle='rgba(255,215,140,0.13)';
+  ctx.fillRect(0,63,78,2);
+  // deck bottom shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(0,72,78,1);
 }
 
 function fishDraw(now) {
   var W=240, H=208;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,WATER_TOP);
-  var wv=Math.sin(now/900)*2;
-  ctx.fillStyle='rgba(18,48,108,0.62)'; ctx.fillRect(0,WATER_TOP+wv,W,H-WATER_TOP);
-  ctx.strokeStyle='rgba(70,130,255,0.12)'; ctx.lineWidth=1;
-  for (var wi=0; wi<4; wi++) {
-    var wy=WATER_TOP+wv+12+wi*18, wx=Math.sin(now/1300+wi*1.2)*10;
-    ctx.beginPath(); ctx.moveTo(15+wx,wy); ctx.lineTo(W-15-wx,wy); ctx.stroke();
+  // sky
+  ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,FW_TOP);
+  // water
+  var wv=Math.sin(now/1100)*1.5;
+  ctx.fillStyle='rgba(12,38,90,0.85)'; ctx.fillRect(0,FW_TOP+wv,W,H-FW_TOP);
+  // water surface shimmer
+  ctx.strokeStyle='rgba(80,150,255,0.18)'; ctx.lineWidth=1;
+  for (var wi=0; wi<6; wi++) {
+    var wy=FW_TOP+wv+8+wi*22, wx=Math.sin(now/1400+wi*0.9)*9;
+    ctx.beginPath(); ctx.moveTo(10+wx,wy); ctx.lineTo(W-10-wx,wy); ctx.stroke();
   }
-
+  // score
   ctx.font='bold 10px -apple-system,sans-serif';
   ctx.textAlign='right'; ctx.fillStyle=ORANGE;
   ctx.fillText('fish: '+FG.score, W-8, 17);
-
-  var lbl={idle:'READY',casting:'CASTING',waiting:'WAITING...',
-           nibble:'!! BITE !!',reeling:'REELING!',result:FG.result==='caught'?'GOT ONE!':'GOT AWAY...'};
-  ctx.textAlign='left';
-  ctx.fillStyle = FG.st==='nibble' ? ORANGE : 'rgba(255,255,255,0.35)';
-  if (FG.st==='nibble') ctx.globalAlpha=0.6+Math.sin(now/90)*0.4;
-  ctx.font='bold 9px -apple-system,sans-serif';
-  ctx.fillText(lbl[FG.st]||'', 8, 17);
-  ctx.globalAlpha=1;
-
-  if (FG.lineP>0 || FG.st==='casting') {
-    var hookY=LINE_Y+FG.lineP*LINE_MAX;
-    var bob = FG.st==='waiting'?Math.sin(FG.bobPhase)*1.5 : FG.st==='nibble'?Math.sin(FG.bobPhase)*6 : 0;
-    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(LINE_X,LINE_Y); ctx.lineTo(LINE_X,hookY+bob); ctx.stroke();
-    ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.arc(LINE_X,hookY+bob+3,3,Math.PI*0.15,Math.PI*1.2); ctx.stroke();
-    if (FG.st==='nibble'||FG.st==='reeling'||(FG.st==='result'&&FG.result==='caught')) {
-      var fb=FG.st==='nibble'?Math.sin(FG.bobPhase*1.4)*3:0;
-      drawFish(FG.fishX, hookY+bob+fb);
+  // fishing line
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(FL_X,FL_YTIP); ctx.lineTo(FL_X,FG.hookY); ctx.stroke();
+  // hook
+  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(FL_X,FG.hookY+3,3,Math.PI*0.15,Math.PI*1.2); ctx.stroke();
+  // catch-zone glow (only while fishing, not when hooked)
+  if (FG.st==='fishing') {
+    ctx.save(); ctx.globalAlpha=0.12; ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.arc(FL_X,FG.hookY,14,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  // free fish
+  for (var j=0; j<FG.fish.length; j++) {
+    drawFish(FG.fish[j].x, FG.fish[j].y, false);
+  }
+  // hooked fish — tracks hook, struggles on the line
+  if (FG.st==='hooked') {
+    var wiggle = Math.sin(now/70)*3;
+    drawFish(FL_X+wiggle, FG.hookY+4, true);
+    // reel hint
+    ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.font='bold 9px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.fillText('reel it in! ↑', W/2, H-10);
+  }
+  // sparkles
+  if (sparkles.length) {
+    ctx.save();
+    for (var si=sparkles.length-1; si>=0; si--) {
+      var sp=sparkles[si];
+      ctx.globalAlpha=sp.life; ctx.fillStyle=ORANGE; ctx.fillRect(sp.x,sp.y,2,2);
+      sp.x+=sp.vx; sp.y+=sp.vy; sp.life-=0.09;
+      if (sp.life<=0) sparkles.splice(si,1);
     }
+    ctx.restore();
   }
-
-  if (FG.st==='nibble') {
-    var trem=Math.max(0,(FG.nibbleEnd-now)/FG.NIBBLE_WIN);
-    ctx.fillStyle='rgba(255,103,32,0.22)'; ctx.fillRect(60,H-11,120,5);
-    ctx.fillStyle=ORANGE; ctx.fillRect(60,H-11,120*trem,5);
-  }
-
-  if (FG.st==='idle') {
-    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='9px -apple-system,sans-serif';
-    ctx.textAlign='center'; ctx.fillText('scroll ↑ to cast',W/2,H-12); ctx.textAlign='left';
-  }
-
-  if (FG.st==='result') {
+  // result flash
+  if (FG.result==='caught') {
     var rem=FG.resultEnd-now;
-    ctx.globalAlpha=rem<400?rem/400:1;
-    ctx.fillStyle=FG.result==='caught'?ORANGE:'rgba(255,255,255,0.65)';
-    ctx.font='bold 15px -apple-system,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(FG.result==='caught'?'★ GOT ONE! ★':'got away...', W*0.6, H/2+8);
-    ctx.globalAlpha=1; ctx.textAlign='left';
+    ctx.globalAlpha=rem<350?rem/350:1;
+    if (FG.hookedFish) drawFish(FG.hookedFish.x, FG.hookedFish.y, true);
+    ctx.fillStyle=ORANGE; ctx.font='bold 13px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.fillText('★ GOT ONE! ★',W/2+25,H/2-10);
+    ctx.globalAlpha=1;
   }
-
-  drawSpriteAt(FB_X, FB_Y, Math.max(1,state.stage), 'normal', 0.6);
+  // pier and buddy
+  drawPier();
+  drawSpriteAt(34, 48, Math.max(1,state.stage), 'normal', 0.6);
+  // depth hint dots on line
+  ctx.fillStyle='rgba(255,255,255,0.12)';
+  for (var d=FH_MIN+20; d<FH_MAX; d+=25) {
+    ctx.fillRect(FL_X-1, d, 3, 1);
+  }
+  ctx.textAlign='left';
 }
-
-function drawFish(x, y) {
-  ctx.fillStyle='rgba(65,148,255,0.9)';
+function drawFish(x, y, hooked) {
+  ctx.fillStyle = hooked ? ORANGE : 'rgba(65,148,255,0.92)';
   ctx.fillRect(x-7,y-3,10,6);
   ctx.beginPath(); ctx.moveTo(x+3,y-3); ctx.lineTo(x+9,y-1); ctx.lineTo(x+9,y+3);
   ctx.closePath(); ctx.fill();
   ctx.fillStyle='#000'; ctx.fillRect(x-5,y-1,2,2);
+}
+
+// ── memory game ────────────────────────────────────────────────────────────────
+var MG = {
+  st:'idle', seq:[], inputIdx:0, showIdx:0,
+  flashEnd:0, gapEnd:0, inGap:false,
+  round:1, maxRounds:5, resultEnd:0,
+  lastInput:0, lastDir:null,
+  FLASH_DUR:520, GAP_DUR:280, RESULT_PAUSE:2200, INPUT_COOLDOWN:500, INPUT_FLASH:300
+};
+function memoryStart() {
+  if (state.stage===0) return;
+  if (state.sick) { say('too sick~'); return; }
+  MG.st='idle'; MG.seq=[]; MG.inputIdx=0; MG.showIdx=0;
+  MG.inGap=false; MG.round=1;
+  mode='memory'; updateHint();
+  setTimeout(memoryNextRound, 900);
+}
+function memoryNextRound() {
+  if (mode!=='memory') return;
+  MG.seq=[];
+  for (var i=0; i<MG.round+2; i++) MG.seq.push(Math.random()<0.5?'up':'down');
+  MG.showIdx=0; MG.inputIdx=0; MG.inGap=false;
+  MG.flashEnd=Date.now()+MG.FLASH_DUR; MG.st='showing';
+}
+function memoryScrollUp()   { if (MG.st==='input') memoryInput('down'); }
+function memoryScrollDown() { if (MG.st==='input') memoryInput('up');   }
+function memoryInput(dir) {
+  var now = Date.now();
+  if (now - MG.lastInput < MG.INPUT_COOLDOWN) return;
+  MG.lastInput = now; MG.lastDir = dir;
+  if (dir===MG.seq[MG.inputIdx]) {
+    MG.inputIdx++;
+    if (MG.inputIdx>=MG.seq.length) {
+      state.happiness=Math.min(100,state.happiness+8);
+      state.hunger=Math.max(0,state.hunger-2);
+      saveState(); updateUI();
+      if (MG.round>=MG.maxRounds) {
+        MG.st='win'; MG.resultEnd=Date.now()+MG.RESULT_PAUSE;
+        say('perfect! ★', 2000);
+        state.happiness=Math.min(100,state.happiness+15);
+        spawnConfetti(120,95); saveState(); updateUI();
+      } else {
+        MG.st='roundwin'; MG.resultEnd=Date.now()+1000; say('nice! ★');
+      }
+    }
+  } else {
+    MG.st='fail'; MG.resultEnd=Date.now()+MG.RESULT_PAUSE;
+    say('oops!', 1500);
+    state.happiness=Math.max(0,state.happiness-5);
+    saveState(); updateUI();
+  }
+}
+function memoryUpdate(now) {
+  switch(MG.st) {
+    case 'showing':
+      if (!MG.inGap && now>=MG.flashEnd) {
+        MG.inGap=true; MG.gapEnd=now+MG.GAP_DUR;
+      } else if (MG.inGap && now>=MG.gapEnd) {
+        MG.showIdx++;
+        if (MG.showIdx>=MG.seq.length) { MG.st='input'; MG.inputIdx=0; }
+        else { MG.inGap=false; MG.flashEnd=now+MG.FLASH_DUR; }
+      }
+      break;
+    case 'roundwin':
+      if (now>=MG.resultEnd) { MG.round++; memoryNextRound(); }
+      break;
+    case 'fail': case 'win':
+      if (now>=MG.resultEnd) exitGame();
+      break;
+  }
+}
+function memoryDraw(now) {
+  var W=240, H=208, cx=W/2, cy=98;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#0e0e10'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  ctx.fillStyle=ORANGE; ctx.font='bold 8px -apple-system,sans-serif';
+  ctx.fillText('MEMORY', cx, 15);
+  ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='8px -apple-system,sans-serif';
+  ctx.fillText('ROUND '+MG.round+' / '+MG.maxRounds, cx, 27);
+
+  if (MG.st==='showing') {
+    var showing = !MG.inGap && MG.showIdx < MG.seq.length;
+    var dir = MG.showIdx < MG.seq.length ? MG.seq[MG.showIdx] : null;
+    ctx.fillStyle='rgba(255,255,255,0.07)';
+    ctx.font='bold 54px -apple-system,sans-serif';
+    ctx.fillText('↑', cx, cy-4);
+    ctx.fillText('↓', cx, cy+54);
+    if (showing && dir) {
+      ctx.fillStyle=ORANGE;
+      ctx.font='bold 62px -apple-system,sans-serif';
+      ctx.fillText(dir==='up'?'↑':'↓', cx, dir==='up'?cy-4:cy+54);
+    }
+    drawMemoryDots(MG.showIdx, MG.seq.length, H-18, false);
+  } else if (MG.st==='input') {
+    var inputFlash = MG.lastDir && (now - MG.lastInput) < MG.INPUT_FLASH;
+    ctx.font='bold 54px -apple-system,sans-serif';
+    ctx.fillStyle = (inputFlash && MG.lastDir==='up') ? ORANGE : 'rgba(255,255,255,0.07)';
+    ctx.fillText('↑', cx, cy-4);
+    ctx.fillStyle = (inputFlash && MG.lastDir==='down') ? ORANGE : 'rgba(255,255,255,0.07)';
+    ctx.fillText('↓', cx, cy+54);
+    ctx.fillStyle='rgba(255,255,255,0.28)';
+    ctx.font='bold 9px -apple-system,sans-serif';
+    ctx.fillText('your turn', cx, cy-28);
+    drawMemoryDots(MG.inputIdx, MG.seq.length, H-18, true);
+  } else if (MG.st==='idle') {
+    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.fillText('get ready...', cx, cy+8);
+  } else if (MG.st==='roundwin') {
+    ctx.fillStyle=ORANGE; ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.fillText('NICE! ★', cx, cy+8);
+    ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.fillText('next round...', cx, cy+26);
+  } else if (MG.st==='win') {
+    ctx.fillStyle=ORANGE; ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.fillText('PERFECT! ★', cx, cy);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.fillText('all rounds complete!', cx, cy+20);
+  } else if (MG.st==='fail') {
+    ctx.fillStyle='rgba(255,80,80,0.9)'; ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.fillText('OOPS!', cx, cy);
+    ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.font='9px -apple-system,sans-serif';
+    ctx.fillText('reached round '+MG.round, cx, cy+20);
+  }
+  // buddy watching in corner
+  if (state.stage > 0) drawSpriteAt(W-28, H-28, Math.max(1,state.stage), 'normal', 0.38);
+  // confetti
+  if (confetti.length) {
+    ctx.save();
+    for (var ci=confetti.length-1;ci>=0;ci--) {
+      var cp=confetti[ci];
+      ctx.globalAlpha=cp.life; ctx.fillStyle=cp.color;
+      ctx.fillRect(cp.x,cp.y,cp.size,cp.size);
+      cp.x+=cp.vx; cp.y+=cp.vy; cp.vy+=0.1; cp.life-=0.02;
+      if(cp.life<=0) confetti.splice(ci,1);
+    }
+    ctx.restore();
+  }
+  ctx.textAlign='left';
+}
+function drawMemoryDots(filled, total, y, isInput) {
+  var dw=8, gap=4, totalW=total*(dw+gap)-gap, sx=120-totalW/2;
+  for (var i=0; i<total; i++) {
+    ctx.fillStyle = i<filled ? ORANGE : (isInput ? 'rgba(255,255,255,0.18)' : 'rgba(255,103,32,0.28)');
+    ctx.fillRect(sx+i*(dw+gap), y-4, dw, 4);
+  }
 }
 
 // ── sprite drawing ─────────────────────────────────────────────────────────────
@@ -673,9 +980,31 @@ function drawEyeCell(px, py, ps, variant) {
   var p=Math.max(1,Math.floor(ps));
   if (variant==='sleeping') return;
   ctx.fillStyle=EYE;
-  if      (variant==='hungry')  ctx.fillRect(px, py+Math.max(1,Math.floor(p*0.3)), p, p);
-  else if (variant==='playing') ctx.fillRect(px, py, p, Math.max(1,Math.floor(p*0.5)));
-  else                          ctx.fillRect(px, py, p, p);
+  if (variant==='sick') {
+    var t=Math.max(1,Math.floor(p/3));
+    ctx.fillRect(px,     py,     t, t);
+    ctx.fillRect(px+t,   py+t,   t, t);
+    ctx.fillRect(px+t*2, py+t*2, t, t);
+    ctx.fillRect(px+t*2, py,     t, t);
+    ctx.fillRect(px,     py+t*2, t, t);
+  } else if (variant==='hungry')  ctx.fillRect(px, py+Math.max(1,Math.floor(p*0.3)), p, p);
+  else if   (variant==='playing') ctx.fillRect(px, py, p, Math.max(1,Math.floor(p*0.5)));
+  else                            ctx.fillRect(px, py, p, p);
+}
+
+// ── poop drawing ───────────────────────────────────────────────────────────────
+function drawPoops() {
+  if (!state.poops) return;
+  var positions = [52, 120, 188];
+  for (var i=0; i<state.poops; i++) drawPoop(positions[i], 187);
+}
+function drawPoop(x, y) {
+  ctx.fillStyle='#5c3317';
+  ctx.fillRect(x-5,y-2,10,5);
+  ctx.fillRect(x-3,y-6,6,5);
+  ctx.fillRect(x-1,y-9,3,4);
+  ctx.fillStyle='rgba(255,255,255,0.1)';
+  ctx.fillRect(x-2,y-8,2,2);
 }
 
 // ── stats panel ────────────────────────────────────────────────────────────────
@@ -686,8 +1015,10 @@ function openStats() {
   document.getElementById('sp-age-val').textContent    = d+'d '+h+'h';
   document.getElementById('sp-hunger-val').textContent = Math.round(state.hunger)+'%';
   document.getElementById('sp-joy-val').textContent    = Math.round(state.happiness)+'%';
-  var ml={happy:'HAPPY',hungry:'HUNGRY',very_hungry:'STARVING',sleeping:'SLEEPING',playing:'PLAYING'};
+  var ml={happy:'HAPPY',hungry:'HUNGRY',very_hungry:'STARVING',sleeping:'SLEEPING',playing:'PLAYING',sick:'SICK'};
   document.getElementById('sp-mood-val').textContent   = ml[getMood()]||'HAPPY';
+  document.getElementById('sp-streak-val').textContent = state.streak+(state.streak===1?' day':' days');
+  document.getElementById('sp-poops-val').textContent  = state.poops > 0 ? state.poops+' mess' : 'clean';
   var ns=state.stage+1;
   if (ns>=STAGE_THRESHOLDS.length) { document.getElementById('sp-next-val').textContent='MAX'; }
   else {
@@ -702,61 +1033,84 @@ function openStats() {
 }
 function closeStats() { document.getElementById('stats-panel').classList.remove('open'); statsOpen=false; }
 
+// ── ui ─────────────────────────────────────────────────────────────────────────
+function updateUI() {
+  document.getElementById('hunger-fill').style.width = Math.round(state.hunger)+'%';
+  document.getElementById('happy-fill').style.width  = Math.round(state.happiness)+'%';
+  document.getElementById('stage-lbl').textContent   = STAGE_NAMES[state.stage];
+  var hEl = document.getElementById('hunger-fill');
+  var jEl = document.getElementById('happy-fill');
+  if (state.hunger    < 15) hEl.classList.add('critical'); else hEl.classList.remove('critical');
+  if (state.happiness < 15) jEl.classList.add('critical'); else jEl.classList.remove('critical');
+}
+
 // ── events ─────────────────────────────────────────────────────────────────────
-var lastSide=0;
+var lastSide=0, lastHomeAction=0, HOME_COOLDOWN=600;
 window.addEventListener('sideClick', function() {
-  if (statsOpen) { closeStats(); return; }
-  if (mode==='menu') { closeMenu(); return; }
-  if (mode==='confirm') { mode='home'; updateHint(); return; }
-  if (mode!=='home') { exitGame(); return; }
+  if (statsOpen)          { closeStats(); return; }
+  if (mode==='menu')      { closeMenu();  return; }
+  if (mode==='confirm')   { mode='home'; updateHint(); return; }
+  if (mode!=='home')      { exitGame();   return; }
   var now=Date.now();
-  if (now-lastSide<400) { openStats(); lastSide=0; }
+  if (now-lastSide<400)   { openStats(); lastSide=0; }
   else { lastSide=now; setTimeout(function(){ if(lastSide===now) doPlay(); },400); }
 });
 window.addEventListener('longPressEnd', function() {
   if (statsOpen) return;
-  if (mode==='menu') { closeMenu(); return; }
-  if (mode!=='home') { exitGame(); return; }
+  if (mode==='menu')  { closeMenu(); return; }
+  if (mode!=='home')  { exitGame();  return; }
   openMenu();
 });
 window.addEventListener('scrollUp', function() {
-  if (statsOpen) return;
+  if (statsOpen) { document.getElementById('stats-panel').scrollTop += 30; return; }
   if (mode==='confirm') { confirmIdx=(confirmIdx+1)%2; return; }
-  if (mode==='menu')  { menuIdx=(menuIdx+1)%MENU_ITEMS.length; return; }
-  if (mode==='home')  { doTreat();        return; }
-  if (mode==='catch') { catchScrollLeft();return; }
-  if (mode==='fish')  { fishScrollUp();   return; }
+  if (mode==='menu')    { menuIdx=(menuIdx+1)%getMenuItems().length; return; }
+  if (mode==='home')    { doCuddle();        return; }
+  if (mode==='catch')   { catchScrollLeft(); return; }
+  if (mode==='fish')    { fishScrollUp();    return; }
+  if (mode==='memory')  { memoryScrollUp();  return; }
 });
 window.addEventListener('scrollDown', function() {
-  if (statsOpen) return;
+  if (statsOpen) { document.getElementById('stats-panel').scrollTop -= 30; return; }
   if (mode==='confirm') { confirmIdx=(confirmIdx+1)%2; return; }
-  if (mode==='menu')  { menuIdx=(menuIdx-1+MENU_ITEMS.length)%MENU_ITEMS.length; return; }
-  if (mode==='home')  { doCuddle();        return; }
-  if (mode==='catch') { catchScrollRight();return; }
-  if (mode==='fish')  { fishScrollDown();  return; }
+  if (mode==='menu')    { menuIdx=(menuIdx-1+getMenuItems().length)%getMenuItems().length; return; }
+  if (mode==='home')    { doFeed();            return; }
+  if (mode==='catch')   { catchScrollRight();  return; }
+  if (mode==='fish')    { fishScrollDown();    return; }
+  if (mode==='memory')  { memoryScrollDown();  return; }
 });
-
 document.addEventListener('keydown', function(e) {
-  if (e.key==='Escape')            { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
-  if (e.key==='ArrowUp')           window.dispatchEvent(new Event('scrollUp'));
-  if (e.key==='ArrowDown')         window.dispatchEvent(new Event('scrollDown'));
-  if (e.key===' '&&!e.repeat)     { e.preventDefault(); if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); else if(mode==='home') doFeed(); }
-  if (e.key==='Enter')             { if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); }
-  if (e.key==='Tab')               { e.preventDefault(); state.stage=(state.stage+1)%5; saveState(); }
-  if (e.key==='r')                 window.dispatchEvent(new Event('longPressEnd'));
+  if (e.key==='Escape')        { e.preventDefault(); window.dispatchEvent(new Event('sideClick')); }
+  if (e.key==='ArrowUp')       window.dispatchEvent(new Event('scrollUp'));
+  if (e.key==='ArrowDown')     window.dispatchEvent(new Event('scrollDown'));
+  if (e.key===' '&&!e.repeat) { e.preventDefault(); if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); else if(mode==='home') doFeed(); }
+  if (e.key==='Enter')         { if(mode==='confirm') confirmReset(); else if(mode==='menu') confirmMenu(); }
+  if (e.key==='Tab')           { e.preventDefault(); state.stage=(state.stage+1)%5; saveState(); }
+  if (e.key==='r')             window.dispatchEvent(new Event('longPressEnd'));
 });
 canvas.addEventListener('pointerup', function(e) {
   e.preventDefault();
-  if (statsOpen) { closeStats(); return; }
+  if (statsOpen)        { closeStats(); return; }
   if (mode==='confirm') { confirmReset(); return; }
-  if (mode==='menu') { confirmMenu(); return; }
-  if (mode==='home') doFeed();
+  if (mode==='menu')    { confirmMenu();  return; }
+  if (mode==='home')    doTreat();
 });
-document.getElementById('stats-panel').addEventListener('pointerup', function(e) {
-  e.preventDefault(); closeStats();
+var spDragStartY=0, spDragMoved=false;
+var spEl = document.getElementById('stats-panel');
+spEl.addEventListener('pointerdown', function(e) { spDragStartY=e.clientY; spDragMoved=false; });
+spEl.addEventListener('pointermove', function(e) { if (Math.abs(e.clientY-spDragStartY)>6) spDragMoved=true; });
+spEl.addEventListener('pointerup', function(e) { e.preventDefault(); if (!spDragMoved) closeStats(); });
+document.getElementById('sp-ctrl-header').addEventListener('pointerup', function(e) {
+  e.stopPropagation();
+  var hdr  = document.getElementById('sp-ctrl-header');
+  var list = document.getElementById('sp-controls');
+  var div  = document.getElementById('sp-ctrl-divider');
+  var open = list.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+  div.style.display = open ? '' : 'none';
 });
 
-// shake
+// ── shake ──────────────────────────────────────────────────────────────────────
 (function(){
   var lx=0,ly=0,lz=0,last=0;
   window.addEventListener('devicemotion',function(e){
@@ -764,7 +1118,7 @@ document.getElementById('stats-panel').addEventListener('pointerup', function(e)
     var dx=(a.x||0)-lx, dy=(a.y||0)-ly, dz=(a.z||0)-lz;
     lx=a.x||0; ly=a.y||0; lz=a.z||0;
     var now=Date.now();
-    if (Math.sqrt(dx*dx+dy*dy+dz*dz)>12 && now-last>1000 && mode==='home' && state.stage>0) {
+    if (Math.sqrt(dx*dx+dy*dy+dz*dz)>12 && now-last>1000 && mode==='home' && state.stage>0 && !state.sick) {
       last=now;
       state.happiness=Math.min(100,state.happiness+10);
       triggerAnim('play',500);
@@ -774,24 +1128,42 @@ document.getElementById('stats-panel').addEventListener('pointerup', function(e)
   });
 })();
 
-// ── ui ─────────────────────────────────────────────────────────────────────────
-function updateUI() {
-  document.getElementById('hunger-fill').style.width = Math.round(state.hunger)+'%';
-  document.getElementById('happy-fill').style.width  = Math.round(state.happiness)+'%';
-  document.getElementById('stage-lbl').textContent   = STAGE_NAMES[state.stage];
-}
+// ── idle sayings (stage-aware) ─────────────────────────────────────────────────
+var STAGE_SAYINGS = {
+  happy:      [['happy~','la la~','(＾▽＾)'],
+               ['la la~','play!','zoomies!','fun~'],
+               ['content~','life is good~','(＾▽＾)'],
+               ['back hurts~','getting old~','in my day...','still happy~']],
+  hungry:     [['hungry!','feed me!'],
+               ['feed me...','hungry...'],
+               ['need food~','hungry...'],
+               ['feed an old pal?','hungry...']],
+  very_hungry:[['so hungry!','starving!'],
+               ['starving!','so hungry!'],
+               ['so hungry!','need food!'],
+               ['please feed~','starving...']],
+  sleeping:   [['zzz...','dreaming~'],
+               ['zzz...','dreaming~'],
+               ['zzz...','good dreams~'],
+               ['snore~','creaky dreams~','zzz...']],
+  sick:       [['not feeling good...','bleh~'],
+               ['feel sick...','bleh~'],
+               ['need medicine...','ugh~'],
+               ['old bones hurt...','sick~']]
+};
 
 // ── render loop ────────────────────────────────────────────────────────────────
 var lastTick=0;
 function render(ts) {
   var now=Date.now();
   if ((mode==='home'||mode==='menu'||mode==='confirm') && (!lastTick||ts-lastTick>30000)) {
-    applyTimeDecay(); applyStageAdvancement(); saveState(); updateUI(); lastTick=ts;
+    applyTimeDecay(); applyStageAdvancement(); checkRareEvent(); saveState(); updateUI(); lastTick=ts;
   }
-  if (mode==='catch') { catchUpdate(now); catchDraw(now); requestAnimationFrame(render); return; }
-  if (mode==='fish')  { fishUpdate(now);  fishDraw(now);  requestAnimationFrame(render); return; }
+  if (mode==='catch')  { catchUpdate(now);  catchDraw(now);  requestAnimationFrame(render); return; }
+  if (mode==='fish')   { fishUpdate(now);   fishDraw(now);   requestAnimationFrame(render); return; }
+  if (mode==='memory') { memoryUpdate(now); memoryDraw(now); requestAnimationFrame(render); return; }
 
-  // home
+  // home render
   ctx.clearRect(0,0,240,208);
   var mood=getMood(), cx=120, cy=95, offsetY=0, scale=1, shakeX=0, elapsed=0;
 
@@ -830,7 +1202,7 @@ function render(ts) {
     }
   }
 
-  // ZZZ
+  // zzz particles
   if (mood==='sleeping') {
     ctx.save();
     for (var zi=zzParticles.length-1;zi>=0;zi--) {
@@ -841,6 +1213,12 @@ function render(ts) {
       zp.y-=0.4; zp.life-=0.008; if(zp.life<=0) zzParticles.splice(zi,1);
     }
     ctx.restore();
+  }
+
+  // sick green tint
+  if (state.sick) {
+    ctx.save(); ctx.fillStyle='rgba(60,180,60,0.07)';
+    ctx.fillRect(0,0,240,208); ctx.restore();
   }
 
   // character
@@ -854,13 +1232,17 @@ function render(ts) {
   } else if (state.stage===0) {
     drawEgg(cx,cy);
   } else {
-    var ev = blinkState.blinking?'sleeping':
-      mood==='sleeping'?'sleeping':
-      (mood==='hungry'||mood==='very_hungry')?'hungry':
-      mood==='playing'?'playing':'normal';
+    var ev = state.sick ? 'sick' :
+      blinkState.blinking ? 'sleeping' :
+      mood==='sleeping' ? 'sleeping' :
+      (mood==='hungry'||mood==='very_hungry') ? 'hungry' :
+      mood==='playing' ? 'playing' : 'normal';
     drawSpriteAt(cx,cy,state.stage,ev,1);
   }
   ctx.restore();
+
+  // poops on floor
+  drawPoops();
 
   // confetti
   if (confetti.length) {
@@ -875,17 +1257,13 @@ function render(ts) {
     ctx.restore();
   }
 
-  // idle mood sayings
+  // idle sayings
   if ((anim.type==='idle'||anim.type==='sleeping') && !bubble.text && now-lastIdleSay>14000) {
     if (Math.random()<0.004) {
-      var sayMap={
-        happy:['happy~','la la~','(＾▽＾)'],
-        hungry:['feed me...','hungry...'],
-        very_hungry:['starving!','so hungry!'],
-        sleeping:['zzz...','dreaming~'],
-        playing:['yay!','fun!']
-      };
-      say(pick(sayMap[mood]||sayMap.happy),2000); lastIdleSay=now;
+      var si = Math.min(Math.max(state.stage-1, 0), 3);
+      var mk = (mood==='sick'||mood==='sleeping'||mood==='very_hungry'||mood==='hungry') ? mood : 'happy';
+      var arr = STAGE_SAYINGS[mk] ? STAGE_SAYINGS[mk][si] : ['happy~'];
+      say(pick(arr), 2000); lastIdleSay=now;
     }
   }
 
@@ -893,8 +1271,7 @@ function render(ts) {
   var sprH=SPRITES[state.stage].length*PIXEL_SIZES[state.stage];
   drawBubble(cx, cy+offsetY-sprH/2);
 
-  // menu / confirm overlays
-  if (mode==='menu') drawMenu();
+  if (mode==='menu')    drawMenu();
   if (mode==='confirm') drawConfirm();
 
   requestAnimationFrame(render);
