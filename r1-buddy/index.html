@@ -327,6 +327,10 @@ function spawnSparkle(x, y) {
 }
 var FIREWORK_COLORS = ['#FFD700','#FF6B35','#FF3399','#00CFFF','#AAFF44','#FFFFFF'];
 var fireworks = [];
+var wave = { active:false, y:-30, startTime:0, DURATION:550 };
+var healthPlus = [];
+var BRUSH_HIT   = { x:210, y:168, r:16 };
+var SYRINGE_HIT = { x:30,  y:168, r:16 };
 function spawnFirework(x, y) {
   for (var i=0; i<32; i++) {
     var a=Math.random()*Math.PI*2, sp=1.5+Math.random()*4;
@@ -1007,6 +1011,42 @@ function drawPoop(x, y) {
   ctx.fillRect(x-2,y-8,2,2);
 }
 
+function drawBrushIcon(now) {
+  var pulse = 0.7 + Math.sin(now/400)*0.3;
+  ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#ffffff';
+  var x=BRUSH_HIT.x, y=BRUSH_HIT.y-8;
+  ctx.fillRect(x-1, y-10, 3, 7);       // handle
+  ctx.fillRect(x-5, y-4,  11, 3);      // ferrule
+  ctx.fillRect(x-5, y-1,  3,  9);      // bristle L
+  ctx.fillRect(x-1, y-1,  3,  10);     // bristle M
+  ctx.fillRect(x+3, y-1,  3,  9);      // bristle R
+  ctx.restore();
+}
+function drawSyringeIcon(now) {
+  var pulse = 0.7 + Math.sin(now/400)*0.3;
+  ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#ffffff';
+  var x=SYRINGE_HIT.x, y=SYRINGE_HIT.y-8;
+  ctx.fillRect(x-1, y-12, 3, 4);       // plunger rod
+  ctx.fillRect(x-4, y-9,  9, 2);       // plunger cap
+  ctx.fillRect(x-3, y-7,  7, 11);      // barrel
+  ctx.fillRect(x-1, y+4,  3, 6);       // needle
+  ctx.fillStyle='rgba(60,220,60,0.6)';
+  ctx.fillRect(x-2, y-5,  5, 7);       // medicine fill
+  ctx.restore();
+}
+function startCleanWave() {
+  if (!state.poops || wave.active) return;
+  wave.active=true; wave.y=-30; wave.startTime=Date.now();
+}
+function startMedicine() {
+  if (!state.sick) return;
+  for (var i=0; i<14; i++) {
+    healthPlus.push({ x:SYRINGE_HIT.x+(Math.random()-0.5)*18, y:SYRINGE_HIT.y,
+      vx:(Math.random()-0.5)*1.2, vy:-(1.2+Math.random()*2.2), life:1.0 });
+  }
+  setTimeout(doMedicine, 900);
+}
+
 // ── stats panel ────────────────────────────────────────────────────────────────
 var statsOpen = false;
 function openStats() {
@@ -1093,7 +1133,14 @@ canvas.addEventListener('pointerup', function(e) {
   if (statsOpen)        { closeStats(); return; }
   if (mode==='confirm') { confirmReset(); return; }
   if (mode==='menu')    { confirmMenu();  return; }
-  if (mode==='home')    doTreat();
+  if (mode==='home') {
+    var rect=canvas.getBoundingClientRect();
+    var tx=(e.clientX-rect.left)*(240/rect.width);
+    var ty=(e.clientY-rect.top)*(208/rect.height);
+    if (state.poops>0 && Math.abs(tx-BRUSH_HIT.x)<BRUSH_HIT.r && Math.abs(ty-BRUSH_HIT.y)<BRUSH_HIT.r) { startCleanWave(); return; }
+    if (state.sick    && Math.abs(tx-SYRINGE_HIT.x)<SYRINGE_HIT.r && Math.abs(ty-SYRINGE_HIT.y)<SYRINGE_HIT.r) { startMedicine(); return; }
+    doTreat();
+  }
 });
 var spDragStartY=0, spDragMoved=false;
 var spEl = document.getElementById('stats-panel');
@@ -1241,8 +1288,46 @@ function render(ts) {
   }
   ctx.restore();
 
-  // poops on floor
-  drawPoops();
+  // poops on floor (hidden behind wave once it passes)
+  if (!wave.active || wave.y < 170) drawPoops();
+
+  // clean wave
+  if (wave.active) {
+    var wElapsed = now - wave.startTime;
+    wave.y = -30 + (238 * wElapsed / wave.DURATION);
+    var grad = ctx.createLinearGradient(0, wave.y-18, 0, wave.y+18);
+    grad.addColorStop(0,   'rgba(180,230,255,0)');
+    grad.addColorStop(0.3, 'rgba(180,230,255,0.55)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.75)');
+    grad.addColorStop(0.7, 'rgba(180,230,255,0.55)');
+    grad.addColorStop(1,   'rgba(180,230,255,0)');
+    ctx.fillStyle=grad; ctx.fillRect(0, wave.y-18, 240, 36);
+    if (wElapsed >= wave.DURATION) {
+      wave.active=false;
+      state.poops=0; state.lastPoop=Date.now();
+      say(pick(['squeaky clean!','fresh!','thanks~']));
+      updateStreak(); saveState(); updateUI();
+    }
+  }
+
+  // health plus particles
+  if (healthPlus.length) {
+    ctx.save(); ctx.font='bold 10px -apple-system,sans-serif'; ctx.textAlign='center';
+    for (var hi=healthPlus.length-1; hi>=0; hi--) {
+      var hp2=healthPlus[hi];
+      ctx.globalAlpha=hp2.life; ctx.fillStyle='#44ee44';
+      ctx.fillText('+', hp2.x, hp2.y);
+      hp2.x+=hp2.vx; hp2.y+=hp2.vy; hp2.life-=0.025;
+      if (hp2.life<=0) healthPlus.splice(hi,1);
+    }
+    ctx.restore();
+  }
+
+  // action icons
+  if (mode==='home' && state.stage>0) {
+    if (state.poops>0 && !wave.active) drawBrushIcon(now);
+    if (state.sick)                    drawSyringeIcon(now);
+  }
 
   // confetti
   if (confetti.length) {
